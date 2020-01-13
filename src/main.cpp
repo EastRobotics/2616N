@@ -12,6 +12,13 @@ typedef enum {
   INTAKE_RIGHT=11,
   INTAKE_LEFT=20  
 } motors;
+
+typedef enum {
+  SINGLE_STICK_ARCADE = 0,
+  DOUBLE_STICK_ARCADE,
+  DOUBLE_STICK_TANK
+} driveMode;
+
 const int DEADZONE_RADIUS = 25; //Circle about the origin
 const int ANGLE_TOLERANCE = 5;  //Surrounding the axes +/-
 
@@ -34,7 +41,7 @@ pros::Motor lift_mtr(LIFT_ADJUSTOR);
 pros::Motor right_intake_mtr(INTAKE_RIGHT);
 pros::Motor left_intake_mtr(INTAKE_LEFT);
 
-int driveSlowdown=1;
+int motorSlowdown=1;
 
 /**
  * A callback function for LLEMU's center button.
@@ -76,7 +83,7 @@ void initialize() {
 }
 
 /**
- * Runs while the robot is in the disabled state of Fi);eld Management System or
+ * Runs while the robot is in the disabled state of Field Management System or
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
@@ -105,7 +112,11 @@ void competition_initialize() {}
  * from where it left off.
  */
 
-void autonomous() {}
+void autonomous(
+
+
+
+) {}
 
 
 /*
@@ -148,8 +159,8 @@ void joystickDataFixer(int &x, int &y) {
 
 //TODO: Make a struct for the x/y values
 void robotDrive() {
-    int y = master.get_analog(ANALOG_LEFT_Y)/driveSlowdown;
-    int x = master.get_analog(ANALOG_LEFT_X)/driveSlowdown;
+    int y = master.get_analog(ANALOG_LEFT_Y)/motorSlowdown;
+    int x = master.get_analog(ANALOG_LEFT_X)/motorSlowdown;
     
 
     joystickDataFixer(x, y);
@@ -160,6 +171,11 @@ void robotDrive() {
     b_right_mtr = y - x;
 }
 
+// void printInt(int x) {
+//     const int digits = (int)log(x);
+//     char str[digits];
+
+// }
 
 void opcontrol() {
 
@@ -187,7 +203,7 @@ void opcontrol() {
 
 
            pros::lcd::set_text(2, str);
-            tray_mtr.move_voltage(x);
+            tray_mtr.move_voltage(x)/motorSlowdown;
         }
         else if (master.get_analog(ANALOG_RIGHT_Y) == 0 ) {
             tray_mtr.move_voltage(0);
@@ -202,9 +218,9 @@ void opcontrol() {
         }
 
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
-            driveSlowdown = 2;
-        } else {
-            driveSlowdown = 1;
+            motorSlowdown = 2;
+        } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+            motorSlowdown = 1;
         }
 
 
