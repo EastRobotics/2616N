@@ -3,14 +3,14 @@
 #include "pros/apix.h"
 
 typedef enum {
-  DRIVE_FRONT_RIGHT = 1,
+  DRIVE_FRONT_RIGHT = 11,
   DRIVE_BACK_RIGHT=2,
-  DRIVE_FRONT_LEFT=9,
-  DRIVE_BACK_LEFT=10,
-  TRAY_ANGLE_ADJUSTOR=5,
-  LIFT_ADJUSTOR=6,
-  INTAKE_RIGHT=11,
-  INTAKE_LEFT=20  
+  DRIVE_FRONT_LEFT=20,
+  DRIVE_BACK_LEFT=8,
+  TRAY_ANGLE_ADJUSTOR=10,
+  LIFT_ADJUSTOR=9,
+  INTAKE_RIGHT=1,
+  INTAKE_LEFT= 7
 } motors;
 
 typedef enum {
@@ -21,18 +21,16 @@ typedef enum {
 
 const int DEADZONE_RADIUS = 25; //Circle about the origin
 const int ANGLE_TOLERANCE = 5;  //Surrounding the axes +/-
-
+const int DRIVE_MODE = SINGLE_STICK_ARCADE; //:)
 
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
 //Drive Motors
-pros::Motor f_right_mtr(DRIVE_FRONT_RIGHT);
-pros::Motor b_right_mtr(DRIVE_BACK_RIGHT);
-//pros::Motor f_left_mtr(DRIVE_FRONT_LEFT);
-//pros::Motor b_left_mtr(DRIVE_BACK_LEFT);
-pros::Motor f_left_mtr(9);
-pros::Motor b_left_mtr(10);
+ pros::Motor f_right_mtr(DRIVE_FRONT_RIGHT);
+ pros::Motor b_right_mtr(DRIVE_BACK_RIGHT);
+ pros::Motor f_left_mtr(DRIVE_FRONT_LEFT);
+ pros::Motor b_left_mtr(DRIVE_BACK_LEFT);
 
 
 
@@ -77,6 +75,13 @@ void initialize() {
     //lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     lift_mtr.set_reversed(true);
+    tray_mtr.set_reversed(true);
+
+
+    tray_mtr.move_voltage(6000);
+    pros::delay(500);
+    tray_mtr.move_voltage(0);
+    tray_mtr.tare_position();
 
 
 	pros::lcd::register_btn1_cb(on_center_button);
@@ -159,67 +164,90 @@ void joystickDataFixer(int &x, int &y) {
 
 //TODO: Make a struct for the x/y values
 void robotDrive() {
-    int y = master.get_analog(ANALOG_LEFT_Y)/motorSlowdown;
-    int x = master.get_analog(ANALOG_LEFT_X)/motorSlowdown;
-    
+    int y = 0;
+    int x = 0;
+    int left = 0;
+    int right = 0;
+    switch(DRIVE_MODE) {
+        case SINGLE_STICK_ARCADE:
+            y = master.get_analog(ANALOG_LEFT_Y)/motorSlowdown;
+            x = master.get_analog(ANALOG_LEFT_X)/motorSlowdown;
+            joystickDataFixer(x, y);
 
-    joystickDataFixer(x, y);
+            f_left_mtr = y + x;
+            f_right_mtr = y - x;
+            b_left_mtr = y + x;
+            b_right_mtr = y - x;
+            break;
+        case DOUBLE_STICK_ARCADE:
+            y = master.get_analog(ANALOG_LEFT_Y)/motorSlowdown;
+            x = master.get_analog(ANALOG_RIGHT_X)/motorSlowdown;
 
-    f_left_mtr = y + x;
-    f_right_mtr = y - x;
-    b_left_mtr = y + x;
-    b_right_mtr = y - x;
+            f_left_mtr = y + x;
+            f_right_mtr = y - x;
+            b_left_mtr = y + x;
+            b_right_mtr = y - x;
+            break;
+        case DOUBLE_STICK_TANK:
+            left = master.get_analog(ANALOG_LEFT_Y)/motorSlowdown;
+            right = master.get_analog(ANALOG_RIGHT_Y)/motorSlowdown;
+
+            f_left_mtr = left;
+            f_right_mtr = right;
+            b_left_mtr = left;
+            b_right_mtr = right;
+            break;
+    }
 }
 
-// void printInt(int x) {
-//     const int digits = (int)log(x);
-//     char str[digits];
-
-// }
 
 void opcontrol() {
+    bool held = false;
 
 
 	while (true) {
 		 robotDrive();
-         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-             right_intake_mtr.move_voltage(12000);
-             left_intake_mtr.move_voltage(12000);
-         } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-             right_intake_mtr.move_voltage(-12000);
-             left_intake_mtr.move_voltage(-12000);
-         } else if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-              right_intake_mtr.move_voltage(0);
-             left_intake_mtr.move_voltage(0);            
-         }
+
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+                right_intake_mtr.move_voltage(12000);
+                left_intake_mtr.move_voltage(12000);
+
+        } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+            right_intake_mtr.move_voltage(-12000);
+            left_intake_mtr.move_voltage(-12000);
+        } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+            right_intake_mtr.move_voltage(0);
+            left_intake_mtr.move_voltage(0);
+        }
+
 
         int x=0;
-        if((x=master.get_analog(ANALOG_RIGHT_Y)) != 0) {
-           char str[5];
-           x=12000*x/127;            
 
-           sprintf(str,"%f",tray_mtr.get_position());
+            if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) { //Tray up
+                tray_mtr.move_voltage(12000);
+
+                printf("%d",tray_mtr.get_position());
+
+            } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) & tray_mtr.get_position() > 50) { //Tray down
+                tray_mtr.move_voltage(-12000);
+            } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_UP) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) { //Reset case
+                tray_mtr.move_voltage(0);
+            }
 
 
-
-           pros::lcd::set_text(2, str);
-            tray_mtr.move_voltage(x)/motorSlowdown;
-        }
-        else if (master.get_analog(ANALOG_RIGHT_Y) == 0 ) {
-            tray_mtr.move_voltage(0);
-        }
-        
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+        //Controlls intakes
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) { //Intake in
             lift_mtr.move_voltage(12000);
-        } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+        } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) { //Intake out
             lift_mtr.move_voltage(-12000);
-        } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+        } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) { //Reset case
             lift_mtr.move_voltage(0);
         }
 
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+        //Slows down the drive and tray
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Slow down
             motorSlowdown = 2;
-        } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+        } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Reset to default, no slowdown
             motorSlowdown = 1;
         }
 
