@@ -31,7 +31,7 @@ pros::Motor b_right_mtr(DRIVE_BACK_RIGHT, pros::E_MOTOR_GEARSET_18, true);
 pros::Motor f_left_mtr(DRIVE_FRONT_LEFT, pros::E_MOTOR_GEARSET_18, false);
 pros::Motor b_left_mtr(DRIVE_BACK_LEFT, pros::E_MOTOR_GEARSET_18, false);
 
-pros::Motor tray_mtr(TRAY_ANGLE_ADJUSTOR, pros::E_MOTOR_GEARSET_36, false);
+pros::Motor tray_mtr(TRAY_ANGLE_ADJUSTOR, pros::E_MOTOR_GEARSET_36, true);
 pros::Motor lift_mtr(LIFT_ADJUSTOR, pros::E_MOTOR_GEARSET_36, true);
 pros::Motor right_intake_mtr(INTAKE_RIGHT, pros::E_MOTOR_GEARSET_18, true);
 pros::Motor left_intake_mtr(INTAKE_LEFT, pros::E_MOTOR_GEARSET_18, false);
@@ -54,15 +54,15 @@ void on_center_button() {
 	}
 }
 
-void motorTare(pros::Motor& motor)
+void motorTare(pros::Motor& motor, int slowSpeed)
 {
-    int slowSpeed = -3000;
+    // int slowSpeed = 3000;
     motor.tare_position();
     double pos = motor.get_position();
     do {
         pos = motor.get_position();
         motor.move_voltage(slowSpeed);
-        pros::delay(50);
+        pros::delay(20);
     } while (pos != motor.get_position());
     motor.move_voltage(0);
     motor.tare_position();
@@ -82,10 +82,11 @@ void initialize() {
     right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 
-    motorTare(tray_mtr);
-    motorTare(lift_mtr);
-
+    // motorTare(tray_mtr, -6000);
+    motorTare(lift_mtr, -6000);
+    tray_mtr.tare_position();
 	pros::lcd::register_btn1_cb(on_center_button);
 }
 
@@ -119,11 +120,13 @@ void competition_initialize() {}
  * from where it left off.
  */
 
-void autonomous(
+void autonomous () {
+    autonDrive(0,127);
+    right_intake_motor.set_motor_voltage(12000);
+    left_intake_motor.set_motor_voltage(12000);
+    delay(5000);
 
-
-
-) {}
+}
 
 
 /*
@@ -202,17 +205,42 @@ void robotDrive() {
             break;
     }
 }
+void autonDrive(int x, int y) {
+    switch(DRIVE_MODE) {
+        case SINGLE_STICK_ARCADE:
+            joystickDataFixer(x, y);
 
+            f_left_mtr = y + x;
+            f_right_mtr = y - x;
+            b_left_mtr = y + x;
+            b_right_mtr = y - x;
+            break;
+        case DOUBLE_STICK_ARCADE:
+
+            f_left_mtr = y + x;
+            f_right_mtr = y - x;
+            b_left_mtr = y + x;
+            b_right_mtr = y - x;
+            break;
+        case DOUBLE_STICK_TANK:
+
+            f_left_mtr = x;
+            f_right_mtr = y;
+            b_left_mtr = x;
+            b_right_mtr = y;
+            break;
+    }
+}
 
 void liftController()
 {
     float liftGearRatio = 7.0f;
     float trayGearRatio = 27.0f;
-    float trayAngle = 5.0f;
+    float trayAngle = 50.0f;
     int slowLiftSpeed = 6000;
     
     // This may seem high in deg but remember it's divided by 27 for gear ratio so its really not
-    int angleVariance = 20;
+    int angleVariance = trayGearRatio * 5;
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
         // If the tray isn't high enough for the lift to go up,
@@ -233,8 +261,19 @@ void liftController()
         if (floor(tray_mtr.get_position() / angleVariance) == floor((trayAngle * trayGearRatio) / angleVariance))
             tray_mtr.move_absolute(0, 100);
     } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-        lift_mtr.move_voltage(0);
+        if (tray_mtr.get_position() < 1000) {
+        // if (floor(tray_mtr.get_position() / angleVariance) == 0)
+        // if (abs(lift_mtr.get_actual_velocity()) < 2 ) {
+            lift_mtr.move_voltage(-2000);
+
+            auto str = std::to_string(lift_mtr.get_position());
+            pros::lcd::set_text(2, str);
     }
+        else
+            lift_mtr.move_voltage(0);
+    }
+
+
 }
 
 
@@ -255,19 +294,14 @@ void opcontrol() {
              left_intake_mtr.move_voltage(0);
          }
 
-        // int x=0;
-        if((x=master.get_analog(ANALOG_RIGHT_Y)) != 0) {
-            
-            x *= 12000/127;
+         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+             tray_mtr.move_voltage(12000);
+         } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+             tray_mtr.move_voltage(-12000);
+         } else if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_X) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+              tray_mtr.move_voltage(0);
+         }
 
-            auto str = std::to_string(tray_mtr.get_position());
-
-            pros::lcd::set_text(2, str);
-            tray_mtr.move_voltage(x/motorSlowdown);
-        }
-        else if (master.get_analog(ANALOG_RIGHT_Y) == 0 ) {
-            tray_mtr.move_voltage(0);
-        }
 
         liftController();
         // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
