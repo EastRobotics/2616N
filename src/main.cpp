@@ -23,21 +23,18 @@ const int DEADZONE_RADIUS = 25; //Circle about the origin
 const int ANGLE_TOLERANCE = 5;  //Surrounding the axes +/-
 const int DRIVE_MODE = SINGLE_STICK_ARCADE; //:)
 
-
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-//Drive Motors
- pros::Motor f_right_mtr(DRIVE_FRONT_RIGHT);
- pros::Motor b_right_mtr(DRIVE_BACK_RIGHT);
- pros::Motor f_left_mtr(DRIVE_FRONT_LEFT);
- pros::Motor b_left_mtr(DRIVE_BACK_LEFT);
 
+pros::Motor f_right_mtr(DRIVE_FRONT_RIGHT, pros::E_MOTOR_GEARSET_18, true);
+pros::Motor b_right_mtr(DRIVE_BACK_RIGHT, pros::E_MOTOR_GEARSET_18, true);
+pros::Motor f_left_mtr(DRIVE_FRONT_LEFT, pros::E_MOTOR_GEARSET_18, false);
+pros::Motor b_left_mtr(DRIVE_BACK_LEFT, pros::E_MOTOR_GEARSET_18, false);
 
-
-pros::Motor tray_mtr(TRAY_ANGLE_ADJUSTOR);
-pros::Motor lift_mtr(LIFT_ADJUSTOR);
-pros::Motor right_intake_mtr(INTAKE_RIGHT);
-pros::Motor left_intake_mtr(INTAKE_LEFT);
+pros::Motor tray_mtr(TRAY_ANGLE_ADJUSTOR, pros::E_MOTOR_GEARSET_36, false);
+pros::Motor lift_mtr(LIFT_ADJUSTOR, pros::E_MOTOR_GEARSET_36, true);
+pros::Motor right_intake_mtr(INTAKE_RIGHT, pros::E_MOTOR_GEARSET_18, true);
+pros::Motor left_intake_mtr(INTAKE_LEFT, pros::E_MOTOR_GEARSET_18, false);
 
 int motorSlowdown=1;
 
@@ -57,6 +54,20 @@ void on_center_button() {
 	}
 }
 
+void motorTare(pros::Motor& motor)
+{
+    int slowSpeed = -3000;
+    motor.tare_position();
+    double pos = motor.get_position();
+    do {
+        pos = motor.get_position();
+        motor.move_voltage(slowSpeed);
+        pros::delay(50);
+    } while (pos != motor.get_position());
+    motor.move_voltage(0);
+    motor.tare_position();
+}
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -64,25 +75,16 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+    
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Hello PROS User!");
 
-    f_right_mtr.set_reversed(true);
-    b_right_mtr.set_reversed(true);
-    right_intake_mtr.set_reversed(true);
     right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-    //lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-    lift_mtr.set_reversed(true);
-    tray_mtr.set_reversed(true);
 
-
-    tray_mtr.move_voltage(6000);
-    pros::delay(500);
-    tray_mtr.move_voltage(0);
-    tray_mtr.tare_position();
-
+    motorTare(tray_mtr);
+    motorTare(lift_mtr);
 
 	pros::lcd::register_btn1_cb(on_center_button);
 }
@@ -163,6 +165,7 @@ void joystickDataFixer(int &x, int &y) {
 }
 
 //TODO: Make a struct for the x/y values
+
 void robotDrive() {
     int y = 0;
     int x = 0;
@@ -201,48 +204,79 @@ void robotDrive() {
 }
 
 
+void liftController()
+{
+    float liftGearRatio = 7.0f;
+    float trayGearRatio = 27.0f;
+    float trayAngle = 5.0f;
+    int slowLiftSpeed = 6000;
+    
+    // This may seem high in deg but remember it's divided by 27 for gear ratio so its really not
+    int angleVariance = 20;
+
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+        // If the tray isn't high enough for the lift to go up,
+        if (tray_mtr.get_position() < (trayAngle * trayGearRatio)) {
+            // If the tray isn't already set to go to the correct angle
+            if (tray_mtr.get_target_position() != (trayAngle * trayGearRatio))
+                // Move it to the correct angle
+                tray_mtr.move_absolute(trayAngle * trayGearRatio, 100);
+            // Keep the lift slow until the tray is up so that it doesn't hit
+            lift_mtr.move_voltage(slowLiftSpeed);
+        } else {
+            // If it's out of the way, full speed ahead
+            lift_mtr.move_voltage(12000);
+        }
+    } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+        lift_mtr.move_voltage(-12000);
+        // If the tray is approximately in the same place (approx determined by angleVariance), put it back down
+        if (floor(tray_mtr.get_position() / angleVariance) == floor((trayAngle * trayGearRatio) / angleVariance))
+            tray_mtr.move_absolute(0, 100);
+    } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+        lift_mtr.move_voltage(0);
+    }
+}
+
+
 void opcontrol() {
-    bool held = false;
 
-
+    int x;
 	while (true) {
 		 robotDrive();
 
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-                right_intake_mtr.move_voltage(12000);
-                left_intake_mtr.move_voltage(12000);
+         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+             right_intake_mtr.move_voltage(12000);
+             left_intake_mtr.move_voltage(12000);
+         } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+             right_intake_mtr.move_voltage(-12000);
+             left_intake_mtr.move_voltage(-12000);
+         } else if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+              right_intake_mtr.move_voltage(0);
+             left_intake_mtr.move_voltage(0);
+         }
 
-        } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-            right_intake_mtr.move_voltage(-12000);
-            left_intake_mtr.move_voltage(-12000);
-        } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-            right_intake_mtr.move_voltage(0);
-            left_intake_mtr.move_voltage(0);
+        // int x=0;
+        if((x=master.get_analog(ANALOG_RIGHT_Y)) != 0) {
+            
+            x *= 12000/127;
+
+            auto str = std::to_string(tray_mtr.get_position());
+
+            pros::lcd::set_text(2, str);
+            tray_mtr.move_voltage(x/motorSlowdown);
+        }
+        else if (master.get_analog(ANALOG_RIGHT_Y) == 0 ) {
+            tray_mtr.move_voltage(0);
         }
 
-
-        int x=0;
-
-            if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) { //Tray up
-                tray_mtr.move_voltage(12000);
-
-                printf("%d",tray_mtr.get_position());
-
-            } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) & tray_mtr.get_position() > 50) { //Tray down
-                tray_mtr.move_voltage(-12000);
-            } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_UP) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) { //Reset case
-                tray_mtr.move_voltage(0);
-            }
-
-
-        //Controlls intakes
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) { //Intake in
-            lift_mtr.move_voltage(12000);
-        } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) { //Intake out
-            lift_mtr.move_voltage(-12000);
-        } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) { //Reset case
-            lift_mtr.move_voltage(0);
-        }
+        liftController();
+        // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+        //     lift_mtr.move_voltage(12000);
+        // } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+        //     lift_mtr.move_voltage(-12000);
+        // } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+        //     lift_mtr.move_voltage(0);
+        // }
 
         //Slows down the drive and tray
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Slow down
@@ -250,9 +284,6 @@ void opcontrol() {
         } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Reset to default, no slowdown
             motorSlowdown = 1;
         }
-
-
-
 
 		pros::delay(20);
 	}
