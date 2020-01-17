@@ -56,11 +56,12 @@ void on_center_button() {
 
 void motorTare(pros::Motor& motor)
 {
+    int slowSpeed = -3000;
     motor.tare_position();
     double pos = motor.get_position();
     do {
         pos = motor.get_position();
-        motor.move_voltage(-3000);
+        motor.move_voltage(slowSpeed);
         pros::delay(50);
     } while (pos != motor.get_position());
     motor.move_voltage(0);
@@ -190,6 +191,8 @@ void liftController()
     float trayGearRatio = 27.0f;
     float trayAngle = 5.0f;
     int slowLiftSpeed = 6000;
+    
+    // This may seem high in deg but remember it's divided by 27 for gear ratio so its really not
     int angleVariance = 20;
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
