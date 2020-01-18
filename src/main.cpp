@@ -15,13 +15,13 @@ typedef enum {
 
 typedef enum {
   SINGLE_STICK_ARCADE = 0,
-  DOUBLE_STICK_ARCADE,
+  DOUBLE_STICK_ARCADE, 
   DOUBLE_STICK_TANK
 } driveMode;
 
 const int DEADZONE_RADIUS = 25; //Circle about the origin
 const int ANGLE_TOLERANCE = 5;  //Surrounding the axes +/-
-const int DRIVE_MODE = SINGLE_STICK_ARCADE; //:)
+const int DRIVE_MODE = DOUBLE_STICK_ARCADE; //:)
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
@@ -54,18 +54,57 @@ void on_center_button() {
 	}
 }
 
-void motorTare(pros::Motor& motor, int slowSpeed)
+void liftTare()
 {
-    // int slowSpeed = 3000;
-    motor.tare_position();
-    double pos = motor.get_position();
+    int slowSpeed = -6000;
+    lift_mtr.tare_position();
+    double pos = lift_mtr.get_position();
     do {
-        pos = motor.get_position();
-        motor.move_voltage(slowSpeed);
+        pos = lift_mtr.get_position();
+        lift_mtr.move_voltage(slowSpeed);
         pros::delay(20);
-    } while (pos != motor.get_position());
-    motor.move_voltage(0);
-    motor.tare_position();
+    } while (pos != lift_mtr.get_position());
+    lift_mtr.move_voltage(0);
+    lift_mtr.tare_position();
+}
+
+void trayTare()
+{
+    int slowSpeed = 6000;
+    // tray_mtr.tare_position();
+    // double pos;
+    do {
+        // pos = tray_mtr.get_position();
+        tray_mtr.move_velocity(slowSpeed);
+        pros::delay(20);
+        tray_mtr.move_velocity(0);
+        pros::delay(20);
+    // } while (pos != tray_mtr.get_position())
+    } while (tray_mtr.get_actual_velocity());
+    tray_mtr.tare_position();
+
+}
+
+void deploy()
+{
+    tray_mtr.move_voltage(-1200);
+    lift_mtr.move_voltage(-1200);
+    right_intake_mtr.move_voltage(-12000);
+    left_intake_mtr.move_voltage(-12000);
+    f_right_mtr.move_voltage(12000);
+    b_right_mtr.move_voltage(12000);
+    f_left_mtr.move_voltage(12000);
+    b_left_mtr.move_voltage(12000);
+    pros::delay(200);
+    f_right_mtr.move_voltage(0);
+    b_right_mtr.move_voltage(0);
+    f_left_mtr.move_voltage(0);
+    b_left_mtr.move_voltage(0);
+    pros::delay(1000);
+    tray_mtr.move_voltage(0);
+    lift_mtr.move_voltage(0);
+    right_intake_mtr.move_voltage(0);
+    left_intake_mtr.move_voltage(0);
 }
 
 /**
@@ -76,18 +115,21 @@ void motorTare(pros::Motor& motor, int slowSpeed)
  */
 void initialize() {
     
-	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
+	// pros::lcd::initialize();
+	// pros::lcd::set_text(1, "Hello PROS User!");
 
     right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 
-    // motorTare(tray_mtr, -6000);
-    motorTare(lift_mtr, -6000);
-    tray_mtr.tare_position();
-	pros::lcd::register_btn1_cb(on_center_button);
+    // trayTare();
+    // liftTare();
+    // tray_mtr.tare_position();
+	// pros::lcd::register_btn1_cb(on_center_button);
+    
+    //Deployment
+
 }
 
 /**
@@ -106,7 +148,36 @@ void disabled() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {}
+void competition_initialize() {
+}
+
+
+void autonDrive(int x, int y) {
+    // switch(DRIVE_MODE) {
+    //     case SINGLE_STICK_ARCADE:
+    //         joystickDataFixer(x, y);
+
+    //         f_left_mtr = y + x;
+    //         f_right_mtr = y - x;
+    //         b_left_mtr = y + x;
+    //         b_right_mtr = y - x;
+    //         break;
+    //     case DOUBLE_STICK_ARCADE:
+
+    //         f_left_mtr = y + x;
+    //         f_right_mtr = y - x;
+    //         b_left_mtr = y + x;
+    //         b_right_mtr = y - x;
+    //         break;
+    //     case DOUBLE_STICK_TANK:
+
+    //         f_left_mtr = x;
+    //         f_right_mtr = y;
+    //         b_left_mtr = x;
+    //         b_right_mtr = y;
+    //         break;
+    // }
+}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -121,11 +192,15 @@ void competition_initialize() {}
  */
 
 void autonomous () {
-    autonDrive(0,127);
-    right_intake_motor.set_motor_voltage(12000);
-    left_intake_motor.set_motor_voltage(12000);
-    delay(5000);
-
+    deploy();
+    trayTare();
+    liftTare();
+    // autonDrive(0,127);
+    // right_intake_mtr.move_voltage(12000);
+    // left_intake_mtr.move_voltage(12000);
+    // pros::delay(5000);
+    // right_intake_mtr.move_voltage(0);
+    // left_intake_mtr.move_voltage(0);
 }
 
 
@@ -205,32 +280,7 @@ void robotDrive() {
             break;
     }
 }
-void autonDrive(int x, int y) {
-    switch(DRIVE_MODE) {
-        case SINGLE_STICK_ARCADE:
-            joystickDataFixer(x, y);
 
-            f_left_mtr = y + x;
-            f_right_mtr = y - x;
-            b_left_mtr = y + x;
-            b_right_mtr = y - x;
-            break;
-        case DOUBLE_STICK_ARCADE:
-
-            f_left_mtr = y + x;
-            f_right_mtr = y - x;
-            b_left_mtr = y + x;
-            b_right_mtr = y - x;
-            break;
-        case DOUBLE_STICK_TANK:
-
-            f_left_mtr = x;
-            f_right_mtr = y;
-            b_left_mtr = x;
-            b_right_mtr = y;
-            break;
-    }
-}
 
 void liftController()
 {
@@ -318,6 +368,10 @@ void opcontrol() {
         } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Reset to default, no slowdown
             motorSlowdown = 1;
         }
+
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+            deploy();
+
 
 		pros::delay(20);
 	}
