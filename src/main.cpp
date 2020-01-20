@@ -21,7 +21,7 @@ typedef enum {
 
 const int DEADZONE_RADIUS = 25; //Circle about the origin
 const int ANGLE_TOLERANCE = 5;  //Surrounding the axes +/-
-const int DRIVE_MODE = DOUBLE_STICK_ARCADE; //:)
+const int DRIVE_MODE = SINGLE_STICK_ARCADE; //:)
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
@@ -195,6 +195,21 @@ void autonomous () {
     deploy();
     trayTare();
     liftTare();
+    b_left_mtr.move_voltage(12000);
+    f_left_mtr.move_voltage(12000);
+    b_right_mtr.move_voltage(12000);
+    b_right_mtr.move_voltage(12000);
+    pros::delay(500);
+    b_left_mtr.move_voltage(-12000);
+    f_left_mtr.move_voltage(-12000);
+    b_right_mtr.move_voltage(-12000);
+    b_right_mtr.move_voltage(-12000);
+    pros::delay(500);
+    b_left_mtr.move_voltage(0);
+    f_left_mtr.move_voltage(0);
+    b_right_mtr.move_voltage(0);
+    b_right_mtr.move_voltage(0);
+
     // autonDrive(0,127);
     // right_intake_mtr.move_voltage(12000);
     // left_intake_mtr.move_voltage(12000);
@@ -322,7 +337,20 @@ void liftController()
         else
             lift_mtr.move_voltage(0);
     }
-
+    // if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+    //     lift_mtr.move_voltage(-12000);
+        
+    // } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+    //     lift_mtr.move_voltage(12000);
+    //     tray_mtr.move_voltage(12000);
+    //         auto str = std::to_string(lift_mtr.get_position());
+    //         pros::lcd::set_text(2, "Lift motor:"+ str);
+    //         str = std::to_string(tray_mtr.get_position());
+    //         pros::lcd::set_text(3, "Tray motor"+str);
+    // } else {
+    //     lift_mtr.move_voltage(0);
+    //     tray_mtr.move_voltage(0);
+    // }
 
 }
 
@@ -334,15 +362,17 @@ void opcontrol() {
 		 robotDrive();
 
          if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-             right_intake_mtr.move_voltage(12000);
-             left_intake_mtr.move_voltage(12000);
+             right_intake_mtr.move_voltage(12000/motorSlowdown);
+             left_intake_mtr.move_voltage(12000/motorSlowdown);
          } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-             right_intake_mtr.move_voltage(-12000);
-             left_intake_mtr.move_voltage(-12000);
+             right_intake_mtr.move_voltage(-12000/motorSlowdown);
+             left_intake_mtr.move_voltage(-12000/motorSlowdown);
          } else if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
               right_intake_mtr.move_voltage(0);
              left_intake_mtr.move_voltage(0);
          }
+
+                 liftController();
 
          if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
              tray_mtr.move_voltage(12000);
@@ -353,7 +383,7 @@ void opcontrol() {
          }
 
 
-        liftController();
+
         // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
         //     lift_mtr.move_voltage(12000);
         // } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
