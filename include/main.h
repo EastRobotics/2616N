@@ -34,15 +34,14 @@
  */
 #define PROS_USE_LITERALS
 
-#include "api.h"
-#include "pros/apix.h"
+#include "math.h"
+#include "pros/motors.hpp"
+#include "pros/apix.h" 
+#include "drive.h"
 /**
  * You should add more #includes here
  */
-#include "okapi/api.hpp"
-#include "pros/rtos.h"
-//#include "pros/api_legacy.h"
-
+ 
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do
  * Motor, you can use the namespace with the following commented out line.
@@ -69,7 +68,7 @@ void disabled(void);
 void competition_initialize(void);
 void opcontrol(void);
 #ifdef __cplusplus
-}
+};
 #endif
 
 #ifdef __cplusplus

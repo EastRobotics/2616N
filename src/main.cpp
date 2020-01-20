@@ -1,6 +1,4 @@
 #include "main.h"
-#include "math.h"
-#include "pros/apix.h"
 
 typedef enum {
   DRIVE_FRONT_RIGHT = 11,
@@ -54,58 +52,6 @@ void on_center_button() {
 	}
 }
 
-void liftTare()
-{
-    int slowSpeed = -6000;
-    lift_mtr.tare_position();
-    double pos = lift_mtr.get_position();
-    do {
-        pos = lift_mtr.get_position();
-        lift_mtr.move_voltage(slowSpeed);
-        pros::delay(20);
-    } while (pos != lift_mtr.get_position());
-    lift_mtr.move_voltage(0);
-    lift_mtr.tare_position();
-}
-
-void trayTare()
-{
-    int slowSpeed = 6000;
-    // tray_mtr.tare_position();
-    // double pos;
-    do {
-        // pos = tray_mtr.get_position();
-        tray_mtr.move_velocity(slowSpeed);
-        pros::delay(20);
-        tray_mtr.move_velocity(0);
-        pros::delay(20);
-    // } while (pos != tray_mtr.get_position())
-    } while (tray_mtr.get_actual_velocity());
-    tray_mtr.tare_position();
-
-}
-
-void deploy()
-{
-    tray_mtr.move_voltage(-1200);
-    lift_mtr.move_voltage(-1200);
-    right_intake_mtr.move_voltage(-12000);
-    left_intake_mtr.move_voltage(-12000);
-    f_right_mtr.move_voltage(12000);
-    b_right_mtr.move_voltage(12000);
-    f_left_mtr.move_voltage(12000);
-    b_left_mtr.move_voltage(12000);
-    pros::delay(200);
-    f_right_mtr.move_voltage(0);
-    b_right_mtr.move_voltage(0);
-    f_left_mtr.move_voltage(0);
-    b_left_mtr.move_voltage(0);
-    pros::delay(1000);
-    tray_mtr.move_voltage(0);
-    lift_mtr.move_voltage(0);
-    right_intake_mtr.move_voltage(0);
-    left_intake_mtr.move_voltage(0);
-}
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -151,33 +97,6 @@ void disabled() {}
 void competition_initialize() {
 }
 
-
-void autonDrive(int x, int y) {
-    // switch(DRIVE_MODE) {
-    //     case SINGLE_STICK_ARCADE:
-    //         joystickDataFixer(x, y);
-
-    //         f_left_mtr = y + x;
-    //         f_right_mtr = y - x;
-    //         b_left_mtr = y + x;
-    //         b_right_mtr = y - x;
-    //         break;
-    //     case DOUBLE_STICK_ARCADE:
-
-    //         f_left_mtr = y + x;
-    //         f_right_mtr = y - x;
-    //         b_left_mtr = y + x;
-    //         b_right_mtr = y - x;
-    //         break;
-    //     case DOUBLE_STICK_TANK:
-
-    //         f_left_mtr = x;
-    //         f_right_mtr = y;
-    //         b_left_mtr = x;
-    //         b_right_mtr = y;
-    //         break;
-    // }
-}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -257,7 +176,58 @@ void joystickDataFixer(int &x, int &y) {
         y = round(r * sin(M_PI / 180 * theta));
 }
 
-//TODO: Make a struct for the x/y values
+void liftTare()
+{
+    int slowSpeed = -6000;
+    lift_mtr.tare_position();
+    double pos = lift_mtr.get_position();
+    do {
+        pos = lift_mtr.get_position();
+        lift_mtr.move_voltage(slowSpeed);
+        pros::delay(20);
+    } while (pos != lift_mtr.get_position());
+    lift_mtr.move_voltage(0);
+    lift_mtr.tare_position();
+}
+
+void trayTare()
+{
+    int slowSpeed = 6000;
+
+
+    do {    
+        // pos = tray_mtr.get_position();
+        tray_mtr.move_velocity(slowSpeed);
+        pros::delay(20);
+        tray_mtr.move_velocity(0);
+        pros::delay(20);
+    // } while (pos != tray_mtr.get_position())
+    } while (tray_mtr.get_actual_velocity());
+    tray_mtr.tare_position();
+
+}
+
+void deploy()
+{
+    tray_mtr.move_voltage(-1200);
+    lift_mtr.move_voltage(-1200);
+    right_intake_mtr.move_voltage(-12000);
+    left_intake_mtr.move_voltage(-12000);
+    f_right_mtr.move_voltage(12000);
+    b_right_mtr.move_voltage(12000);
+    f_left_mtr.move_voltage(12000);
+    b_left_mtr.move_voltage(12000);
+    pros::delay(200);
+    f_right_mtr.move_voltage(0);
+    b_right_mtr.move_voltage(0);
+    f_left_mtr.move_voltage(0);
+    b_left_mtr.move_voltage(0);
+    pros::delay(1000);
+    tray_mtr.move_voltage(0);
+    lift_mtr.move_voltage(0);
+    right_intake_mtr.move_voltage(0);
+    left_intake_mtr.move_voltage(0);
+}
 
 void robotDrive() {
     int y = 0;
@@ -354,54 +324,48 @@ void liftController()
 
 }
 
+void intake() {
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+        right_intake_mtr.move_voltage(12000/motorSlowdown);
+        left_intake_mtr.move_voltage(12000/motorSlowdown);
+    } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+        right_intake_mtr.move_voltage(-12000/motorSlowdown);
+        left_intake_mtr.move_voltage(-12000/motorSlowdown);
+    } else if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+        right_intake_mtr.move_voltage(0);
+        left_intake_mtr.move_voltage(0);
+    }
+}
+
+void tray() {
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+        tray_mtr.move_voltage(12000);
+    } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+        tray_mtr.move_voltage(-12000);
+    } else if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_X) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+        tray_mtr.move_voltage(0);
+    }
+}
+
+void precisionMode() {
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Slow down
+        motorSlowdown = 2;
+    } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Reset to default, no slowdown
+        motorSlowdown = 1;
+    }
+}
 
 void opcontrol() {
-
-    int x;
 	while (true) {
-		 robotDrive();
-
-         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-             right_intake_mtr.move_voltage(12000/motorSlowdown);
-             left_intake_mtr.move_voltage(12000/motorSlowdown);
-         } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-             right_intake_mtr.move_voltage(-12000/motorSlowdown);
-             left_intake_mtr.move_voltage(-12000/motorSlowdown);
-         } else if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-              right_intake_mtr.move_voltage(0);
-             left_intake_mtr.move_voltage(0);
-         }
-
-                 liftController();
-
-         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-             tray_mtr.move_voltage(12000);
-         } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
-             tray_mtr.move_voltage(-12000);
-         } else if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_X) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
-              tray_mtr.move_voltage(0);
-         }
-
-
-
-        // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-        //     lift_mtr.move_voltage(12000);
-        // } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-        //     lift_mtr.move_voltage(-12000);
-        // } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-        //     lift_mtr.move_voltage(0);
-        // }
-
-        //Slows down the drive and tray
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Slow down
-            motorSlowdown = 2;
-        } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Reset to default, no slowdown
-            motorSlowdown = 1;
-        }
-
+    	robotDrive();
+        intake();
+        liftController();
+        tray();
+        precisionMode();
+        
+        //Panic button/debug, should never have to be used during a drive period
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
             deploy();
-
 
 		pros::delay(20);
 	}
