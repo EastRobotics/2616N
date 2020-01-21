@@ -117,17 +117,17 @@ void autonomous () {
     b_left_mtr.move_voltage(12000);
     f_left_mtr.move_voltage(12000);
     b_right_mtr.move_voltage(12000);
-    b_right_mtr.move_voltage(12000);
+    f_right_mtr.move_voltage(12000);
     pros::delay(500);
     b_left_mtr.move_voltage(-12000);
     f_left_mtr.move_voltage(-12000);
     b_right_mtr.move_voltage(-12000);
-    b_right_mtr.move_voltage(-12000);
+    f_right_mtr.move_voltage(-12000);
     pros::delay(500);
     b_left_mtr.move_voltage(0);
     f_left_mtr.move_voltage(0);
     b_right_mtr.move_voltage(0);
-    b_right_mtr.move_voltage(0);
+    f_right_mtr.move_voltage(0);
 
     // autonDrive(0,127);
     // right_intake_mtr.move_voltage(12000);
