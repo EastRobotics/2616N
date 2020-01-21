@@ -61,7 +61,7 @@ void on_center_button() {
  */
 void initialize() {
     
-	// pros::lcd::initialize();
+	pros::lcd::initialize();
 	// pros::lcd::set_text(1, "Hello PROS User!");
 
     right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
@@ -269,58 +269,19 @@ void robotDrive() {
 
 void liftController()
 {
-    float liftGearRatio = 7.0f;
-    float trayGearRatio = 27.0f;
-    float trayAngle = 50.0f;
-    int slowLiftSpeed = 6000;
-    
-    // This may seem high in deg but remember it's divided by 27 for gear ratio so its really not
-    int angleVariance = trayGearRatio * 5;
-
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-        // If the tray isn't high enough for the lift to go up,
-        if (tray_mtr.get_position() < (trayAngle * trayGearRatio)) {
-            // If the tray isn't already set to go to the correct angle
-            if (tray_mtr.get_target_position() != (trayAngle * trayGearRatio))
-                // Move it to the correct angle
-                tray_mtr.move_absolute(trayAngle * trayGearRatio, 100);
-            // Keep the lift slow until the tray is up so that it doesn't hit
-            lift_mtr.move_voltage(slowLiftSpeed);
-        } else {
-            // If it's out of the way, full speed ahead
-            lift_mtr.move_voltage(12000);
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+        lift_mtr.move_voltage(12000/motorSlowdown);
+        if (tray_mtr.get_position() < 1050) {
+            tray_mtr.move_voltage(12000/motorSlowdown);
         }
     } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-        lift_mtr.move_voltage(-12000);
-        // If the tray is approximately in the same place (approx determined by angleVariance), put it back down
-        if (floor(tray_mtr.get_position() / angleVariance) == floor((trayAngle * trayGearRatio) / angleVariance))
-            tray_mtr.move_absolute(0, 100);
-    } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-        if (tray_mtr.get_position() < 1000) {
-        // if (floor(tray_mtr.get_position() / angleVariance) == 0)
-        // if (abs(lift_mtr.get_actual_velocity()) < 2 ) {
-            lift_mtr.move_voltage(-2000);
-
-            auto str = std::to_string(lift_mtr.get_position());
-            pros::lcd::set_text(2, str);
+        lift_mtr.move_voltage(-12000/motorSlowdown);
+        if(lift_mtr.get_position() < 1000 && tray_mtr.get_position() > 0) {
+            tray_mtr.move_voltage(-12000/motorSlowdown);
+        }
+    } else {
+        lift_mtr.move_voltage(0);
     }
-        else
-            lift_mtr.move_voltage(0);
-    }
-    // if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-    //     lift_mtr.move_voltage(-12000);
-        
-    // } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-    //     lift_mtr.move_voltage(12000);
-    //     tray_mtr.move_voltage(12000);
-    //         auto str = std::to_string(lift_mtr.get_position());
-    //         pros::lcd::set_text(2, "Lift motor:"+ str);
-    //         str = std::to_string(tray_mtr.get_position());
-    //         pros::lcd::set_text(3, "Tray motor"+str);
-    // } else {
-    //     lift_mtr.move_voltage(0);
-    //     tray_mtr.move_voltage(0);
-    // }
 
 }
 
@@ -339,10 +300,12 @@ void intake() {
 
 void tray() {
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-        tray_mtr.move_voltage(12000);
+        tray_mtr.move_voltage(12000/motorSlowdown);
     } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
-        tray_mtr.move_voltage(-12000);
-    } else if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_X) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+        tray_mtr.move_voltage(-12000/motorSlowdown);
+    }
+    
+     else {
         tray_mtr.move_voltage(0);
     }
 }
@@ -359,13 +322,23 @@ void opcontrol() {
 	while (true) {
     	robotDrive();
         intake();
-        liftController();
         tray();
+        liftController();
         precisionMode();
         
+        auto str = std::to_string(lift_mtr.get_position());
+        pros::lcd::set_text(2, "Lift motor: "+ str);
+        str = std::to_string(tray_mtr.get_position());
+        pros::lcd::set_text(3, "Tray motor: "+str);
+
         //Panic button/debug, should never have to be used during a drive period
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
             deploy();
+
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+            tray_mtr.tare_position();
+            lift_mtr.tare_position();
+        }
 
 		pros::delay(20);
 	}
