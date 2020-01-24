@@ -6,6 +6,7 @@ void trayTare(void);
 void deploy(void);
 void robotDrive(void);
 void liftController(void);
-void intake(void);
+void intake(int voltage);
+void intakeController(void);
 void tray(void);
 void precisionMode(void);

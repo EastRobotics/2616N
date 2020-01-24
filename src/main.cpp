@@ -17,9 +17,11 @@ typedef enum {
   DOUBLE_STICK_TANK
 } driveMode;
 
-const int DEADZONE_RADIUS = 25; //Circle about the origin
-const int ANGLE_TOLERANCE = 5;  //Surrounding the axes +/-
-const int DRIVE_MODE = SINGLE_STICK_ARCADE; //:)
+constexpr int DEADZONE_RADIUS = 25; //Circle about the origin
+constexpr int ANGLE_TOLERANCE = 5;  //Surrounding the axes +/-
+constexpr int DRIVE_MODE = SINGLE_STICK_ARCADE; //:)
+constexpr int MAX_VOLTAGE = 12000;
+constexpr int MIN_VOLTAGE = -12000;
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
@@ -114,27 +116,24 @@ void autonomous () {
     deploy();
     trayTare();
     liftTare();
-    b_left_mtr.move_voltage(12000);
-    f_left_mtr.move_voltage(12000);
-    b_right_mtr.move_voltage(12000);
-    f_right_mtr.move_voltage(12000);
+    b_left_mtr.move_voltage(MAX_VOLTAGE);
+    f_left_mtr.move_voltage(MAX_VOLTAGE);
+    b_right_mtr.move_voltage(MAX_VOLTAGE);
+    f_right_mtr.move_voltage(MAX_VOLTAGE);
+    left_intake_mtr.move_voltage(MIN_VOLTAGE);
+    right_intake_mtr.move_voltage(MIN_VOLTAGE);
     pros::delay(500);
-    b_left_mtr.move_voltage(-12000);
-    f_left_mtr.move_voltage(-12000);
-    b_right_mtr.move_voltage(-12000);
-    f_right_mtr.move_voltage(-12000);
+    b_left_mtr.move_voltage(MIN_VOLTAGE);
+    f_left_mtr.move_voltage(MIN_VOLTAGE);
+    b_right_mtr.move_voltage(MIN_VOLTAGE);
+    f_right_mtr.move_voltage(MIN_VOLTAGE);
     pros::delay(500);
     b_left_mtr.move_voltage(0);
     f_left_mtr.move_voltage(0);
     b_right_mtr.move_voltage(0);
     f_right_mtr.move_voltage(0);
-
-    // autonDrive(0,127);
-    // right_intake_mtr.move_voltage(12000);
-    // left_intake_mtr.move_voltage(12000);
-    // pros::delay(5000);
-    // right_intake_mtr.move_voltage(0);
-    // left_intake_mtr.move_voltage(0);
+    right_intake_mtr.move_voltage(0);
+    left_intake_mtr.move_voltage(0);
 }
 
 
@@ -178,7 +177,7 @@ void joystickDataFixer(int &x, int &y) {
 
 void liftTare()
 {
-    int slowSpeed = -6000;
+    int slowSpeed = MIN_VOLTAGE/2;
     lift_mtr.tare_position();
     double pos = lift_mtr.get_position();
     do {
@@ -192,7 +191,7 @@ void liftTare()
 
 void trayTare()
 {
-    int slowSpeed = 6000;
+    int slowSpeed = MAX_VOLTAGE/2;
 
 
     do {    
@@ -209,14 +208,13 @@ void trayTare()
 
 void deploy()
 {
-    tray_mtr.move_voltage(-1200);
-    lift_mtr.move_voltage(-1200);
-    right_intake_mtr.move_voltage(-12000);
-    left_intake_mtr.move_voltage(-12000);
-    f_right_mtr.move_voltage(12000);
-    b_right_mtr.move_voltage(12000);
-    f_left_mtr.move_voltage(12000);
-    b_left_mtr.move_voltage(12000);
+    tray_mtr.move_voltage(MIN_VOLTAGE/10);
+    lift_mtr.move_voltage(MIN_VOLTAGE/10);
+    intake(MIN_VOLTAGE);
+    f_right_mtr.move_voltage(MAX_VOLTAGE);
+    b_right_mtr.move_voltage(MAX_VOLTAGE);
+    f_left_mtr.move_voltage(MAX_VOLTAGE);
+    b_left_mtr.move_voltage(MAX_VOLTAGE);
     pros::delay(200);
     f_right_mtr.move_voltage(0);
     b_right_mtr.move_voltage(0);
@@ -225,8 +223,7 @@ void deploy()
     pros::delay(1000);
     tray_mtr.move_voltage(0);
     lift_mtr.move_voltage(0);
-    right_intake_mtr.move_voltage(0);
-    left_intake_mtr.move_voltage(0);
+    intake(0);
 }
 
 void robotDrive() {
@@ -270,39 +267,36 @@ void robotDrive() {
 void liftController()
 {
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-        lift_mtr.move_voltage(12000/motorSlowdown);
-        if (tray_mtr.get_position() < 1050) {
-            tray_mtr.move_voltage(12000/motorSlowdown);
+        lift_mtr.move_voltage(MAX_VOLTAGE/motorSlowdown);
+        if (tray_mtr.get_position() < 1300) {
+            tray_mtr.move_voltage(MAX_VOLTAGE/motorSlowdown);
         }
     } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-        lift_mtr.move_voltage(-12000/motorSlowdown);
-        if(lift_mtr.get_position() < 1000 && tray_mtr.get_position() > 0) {
-            tray_mtr.move_voltage(-12000/motorSlowdown);
+        if(lift_mtr.get_position() < 1300 && tray_mtr.get_position() > 30) {
+            tray_mtr.move_voltage(-8000/motorSlowdown);
         }
+        lift_mtr.move_voltage(MIN_VOLTAGE);
     } else {
         lift_mtr.move_voltage(0);
     }
 
 }
 
-void intake() {
+void intakeController() {
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-        right_intake_mtr.move_voltage(12000/motorSlowdown);
-        left_intake_mtr.move_voltage(12000/motorSlowdown);
+        intake(MAX_VOLTAGE);
     } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-        right_intake_mtr.move_voltage(-12000/motorSlowdown);
-        left_intake_mtr.move_voltage(-12000/motorSlowdown);
+        intake(MIN_VOLTAGE);
     } else if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-        right_intake_mtr.move_voltage(0);
-        left_intake_mtr.move_voltage(0);
+        intake(0);
     }
 }
 
 void tray() {
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-        tray_mtr.move_voltage(12000/motorSlowdown);
-    } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
-        tray_mtr.move_voltage(-12000/motorSlowdown);
+        tray_mtr.move_voltage(MAX_VOLTAGE/motorSlowdown);
+    } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > 50) {
+        tray_mtr.move_voltage(MIN_VOLTAGE/motorSlowdown);
     }
     
      else {
@@ -318,10 +312,15 @@ void precisionMode() {
     }
 }
 
+void intake(int voltage) {
+    right_intake_mtr.move_voltage(voltage/motorSlowdown);
+    left_intake_mtr.move_voltage(voltage/motorSlowdown);
+}
+
 void opcontrol() {
 	while (true) {
     	robotDrive();
-        intake();
+        intakeController();
         tray();
         liftController();
         precisionMode();
@@ -331,13 +330,23 @@ void opcontrol() {
         str = std::to_string(tray_mtr.get_position());
         pros::lcd::set_text(3, "Tray motor: "+str);
 
-        //Panic button/debug, should never have to be used during a drive period
+        //-------------------- DEBUG SECTION -----------------
+
+        //Deployment
         if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
             deploy();
 
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
-            tray_mtr.tare_position();
-            lift_mtr.tare_position();
+        //Manual tareing
+        // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+        //     tray_mtr.tare_position();
+        //     lift_mtr.tare_position();
+        // }
+
+        //Vibration at certain test values
+        if (tray_mtr.get_position() <= 25 ) {
+            master.rumble("-");
+            tray_mtr.move_absolute(55, 50);
+            // tray_mtr.tare_position();
         }
 
 		pros::delay(20);
