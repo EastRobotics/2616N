@@ -10,3 +10,5 @@ void intake(int voltage);
 void intakeController(void);
 void tray(void);
 void precisionMode(void);
+void overTempWarning(void);
+void OTWarning_task(void);

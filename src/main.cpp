@@ -1,4 +1,5 @@
 #include "main.h"
+#include <vector>
 
 typedef enum {
   DRIVE_FRONT_RIGHT = 11,
@@ -16,6 +17,11 @@ typedef enum {
   DOUBLE_STICK_ARCADE, 
   DOUBLE_STICK_TANK
 } driveMode;
+
+typedef struct {
+    std::string motorCode;
+    int temp;
+} motorCodeTemp;
 
 constexpr int DEADZONE_RADIUS = 25; //Circle about the origin
 constexpr int ANGLE_TOLERANCE = 5;  //Surrounding the axes +/-
@@ -229,7 +235,8 @@ void deploy()
     intake(0);
 }
 
-void robotDrive() {
+void robotDrive()
+{
     int y = 0;
     int x = 0;
     int left = 0;
@@ -285,7 +292,8 @@ void liftController()
 
 }
 
-void intakeController() {
+void intakeController()
+{
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
         intake(MAX_VOLTAGE);
     } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
@@ -295,7 +303,8 @@ void intakeController() {
     }
 }
 
-void tray() {
+void tray()
+{
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
         tray_mtr.move_voltage(MAX_VOLTAGE/motorSlowdown);
     } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > 200) {
@@ -307,7 +316,8 @@ void tray() {
     }
 }
 
-void precisionMode() {
+void precisionMode()
+{
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Slow down
         motorSlowdown = 2;
     } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Reset to default, no slowdown
@@ -315,12 +325,117 @@ void precisionMode() {
     }
 }
 
-void intake(int voltage) {
+void intake(int voltage)
+{
     right_intake_mtr.move_voltage(voltage/motorSlowdown);
     left_intake_mtr.move_voltage(voltage/motorSlowdown);
 }
 
+void overTempWarning()
+{
+    constexpr int tempLimit = 10;
+    std::vector<motorCodeTemp> overTempMotors;
+    int temp;
+    static bool overTempStatic;
+    bool overTemp = false;
+    if ((temp = b_left_mtr.get_temperature()) >= tempLimit) {
+        if (!overTempStatic)
+            master.rumble("...");
+        overTempMotors.insert(overTempMotors.end(), {"BL", (int)b_left_mtr.get_temperature()});
+        overTempStatic = true;
+        overTemp = true;
+    }
+    if ((temp = f_left_mtr.get_temperature()) >= tempLimit) {
+        if (!overTempStatic)
+            master.rumble("...");
+        overTempMotors.insert(overTempMotors.end(), {"FL", (int)f_left_mtr.get_temperature()});
+        overTempStatic = true;
+        overTemp = true;
+    }
+    if ((temp = b_right_mtr.get_temperature()) >= tempLimit) {
+        if (!overTempStatic)
+            master.rumble("...");
+        overTempMotors.insert(overTempMotors.end(), {"BR", (int)b_right_mtr.get_temperature()});
+        overTempStatic = true;
+        overTemp = true;
+    }
+    if ((temp = f_right_mtr.get_temperature()) >= tempLimit) {
+        if (!overTempStatic)
+            master.rumble("...");
+        overTempMotors.insert(overTempMotors.end(), {"FR", (int)f_right_mtr.get_temperature()});
+        overTempStatic = true;
+        overTemp = true;
+    }
+    if ((temp = tray_mtr.get_temperature()) >= tempLimit) {
+        if (!overTempStatic)
+            master.rumble("...");
+        overTempMotors.insert(overTempMotors.end(), {"TR", (int)tray_mtr.get_temperature()});
+        overTempStatic = true;
+        overTemp = true;
+    }
+    if ((temp = lift_mtr.get_temperature()) >= tempLimit) {
+        if (!overTempStatic)
+            master.rumble("...");
+        overTempMotors.insert(overTempMotors.end(), {"LT", (int)lift_mtr.get_temperature()});
+        overTempStatic = true;
+        overTemp = true;
+    }
+    // if ((temp = left_intake_mtr.get_temperature()) >= tempLimit) {
+    //     if (!overTempStatic)
+    //         master.rumble("...");
+    //     overTempMotors.insert(overTempMotors.end(), {"LI", (int)left_intake_mtr.get_temperature()});
+    //     overTempStatic = true;
+    //     overTemp = true;
+    // }
+    // if ((temp = right_intake_mtr.get_temperature()) >= tempLimit) {
+    //     if (!overTempStatic)
+    //         master.rumble("...");
+    //     overTempMotors.insert(overTempMotors.end(), {"RI", (int)right_intake_mtr.get_temperature()});
+    //     overTempStatic = true;
+    //     overTemp = true;
+    // }
+    overTempStatic = overTemp;
+    if (overTemp){
+        master.clear();
+        pros::delay(50);
+        std::vector<std::string> buffer;
+        for (auto& i : overTempMotors)
+            buffer.insert(buffer.end(), i.motorCode + " - " + std::to_string(i.temp));
+
+        if (buffer.size() % 2 == 0 && buffer.size() <= 6) {
+            for (int i = 0; i < buffer.size(); i += 2) {
+                std::string str = buffer[i] + ' ' + buffer[i+1];
+                master.set_text(i / 2, 0, str.c_str());
+                pros::delay(50);
+            }
+        } else if (buffer.size() <= 5) {
+            for (int i = 0; i < buffer.size() - 1; i += 2) {
+                std::string str = buffer[i] + ' ' + buffer[i+1];
+                master.set_text(i / 2, 0, str.c_str());
+                pros::delay(50);
+            }
+            master.set_text(2, 0, buffer.back().c_str());
+            pros::delay(50);
+        } else
+            master.set_text(1, 0, "ALL MOTORS DEAD");
+            pros::delay(50);
+        
+
+    } else
+        master.clear();
+        pros::delay(50);
+}
+
+void OTWarning_task(void * a) {
+    while (true) {
+        overTempWarning();
+        pros::delay(500);
+    }
+}
+
 void opcontrol() {
+    pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
+
     tray_mtr.move_voltage(3000);
     pros::delay(60);
     tray_mtr.move_voltage(0);
