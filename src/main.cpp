@@ -114,26 +114,29 @@ void competition_initialize() {
 
 void autonomous () {
     deploy();
-    trayTare();
-    liftTare();
-    b_left_mtr.move_voltage(MAX_VOLTAGE);
-    f_left_mtr.move_voltage(MAX_VOLTAGE);
-    b_right_mtr.move_voltage(MAX_VOLTAGE);
-    f_right_mtr.move_voltage(MAX_VOLTAGE);
-    left_intake_mtr.move_voltage(MIN_VOLTAGE);
-    right_intake_mtr.move_voltage(MIN_VOLTAGE);
-    pros::delay(500);
+    // trayTare();
+    // liftTare();
+    // b_left_mtr.move_voltage(MAX_VOLTAGE);
+    // f_left_mtr.move_voltage(MAX_VOLTAGE);
+    // b_right_mtr.move_voltage(MAX_VOLTAGE);
+    // f_right_mtr.move_voltage(MAX_VOLTAGE);
+    // left_intake_mtr.move_voltage(MIN_VOLTAGE);
+    // right_intake_mtr.move_voltage(MIN_VOLTAGE);
+    // pros::delay(500);
     b_left_mtr.move_voltage(MIN_VOLTAGE);
     f_left_mtr.move_voltage(MIN_VOLTAGE);
     b_right_mtr.move_voltage(MIN_VOLTAGE);
     f_right_mtr.move_voltage(MIN_VOLTAGE);
-    pros::delay(500);
+    pros::delay(1000);
+    b_left_mtr.move_voltage(MAX_VOLTAGE);
+    f_left_mtr.move_voltage(MAX_VOLTAGE);
+    b_right_mtr.move_voltage(MAX_VOLTAGE);
+    f_right_mtr.move_voltage(MAX_VOLTAGE);
+    pros::delay(250);
     b_left_mtr.move_voltage(0);
     f_left_mtr.move_voltage(0);
     b_right_mtr.move_voltage(0);
     f_right_mtr.move_voltage(0);
-    right_intake_mtr.move_voltage(0);
-    left_intake_mtr.move_voltage(0);
 }
 
 
@@ -295,7 +298,7 @@ void intakeController() {
 void tray() {
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
         tray_mtr.move_voltage(MAX_VOLTAGE/motorSlowdown);
-    } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > 50) {
+    } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > 200) {
         tray_mtr.move_voltage(MIN_VOLTAGE/motorSlowdown);
     }
     
@@ -318,6 +321,9 @@ void intake(int voltage) {
 }
 
 void opcontrol() {
+    tray_mtr.move_voltage(3000);
+    pros::delay(60);
+    tray_mtr.move_voltage(0);
 	while (true) {
     	robotDrive();
         intakeController();
@@ -343,12 +349,15 @@ void opcontrol() {
         // }
 
         //Vibration at certain test values
-        if (tray_mtr.get_position() <= 25 ) {
+        if (tray_mtr.get_position() <= 0) {
             master.rumble("-");
-            tray_mtr.move_absolute(55, 50);
+            // tray_mtr.move_absolute(55, 50);
             // tray_mtr.tare_position();
         }
 
-		pros::delay(20);
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN) && !pros::competition::is_connected())
+            autonomous();
+
+        pros::delay(20);
 	}
 }
