@@ -333,7 +333,7 @@ void intake(int voltage)
 
 void overTempWarning()
 {
-    constexpr int tempLimit = 10;
+    constexpr int tempLimit = 50;
     std::vector<motorCodeTemp> overTempMotors;
     int temp;
     static bool overTempStatic;
