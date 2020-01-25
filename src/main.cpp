@@ -333,7 +333,7 @@ void intake(int voltage)
 
 void overTempWarning()
 {
-    constexpr int tempLimit = 10;
+    constexpr int tempLimit = 50;
     std::vector<motorCodeTemp> overTempMotors;
     int temp;
     static bool overTempStatic;
@@ -380,20 +380,20 @@ void overTempWarning()
         overTempStatic = true;
         overTemp = true;
     }
-    // if ((temp = left_intake_mtr.get_temperature()) >= tempLimit) {
-    //     if (!overTempStatic)
-    //         master.rumble("...");
-    //     overTempMotors.insert(overTempMotors.end(), {"LI", (int)left_intake_mtr.get_temperature()});
-    //     overTempStatic = true;
-    //     overTemp = true;
-    // }
-    // if ((temp = right_intake_mtr.get_temperature()) >= tempLimit) {
-    //     if (!overTempStatic)
-    //         master.rumble("...");
-    //     overTempMotors.insert(overTempMotors.end(), {"RI", (int)right_intake_mtr.get_temperature()});
-    //     overTempStatic = true;
-    //     overTemp = true;
-    // }
+    if ((temp = left_intake_mtr.get_temperature()) >= tempLimit) {
+        if (!overTempStatic)
+            master.rumble("...");
+        overTempMotors.insert(overTempMotors.end(), {"LI", (int)left_intake_mtr.get_temperature()});
+        overTempStatic = true;
+        overTemp = true;
+    }
+    if ((temp = right_intake_mtr.get_temperature()) >= tempLimit) {
+        if (!overTempStatic)
+            master.rumble("...");
+        overTempMotors.insert(overTempMotors.end(), {"RI", (int)right_intake_mtr.get_temperature()});
+        overTempStatic = true;
+        overTemp = true;
+    }
     overTempStatic = overTemp;
     if (overTemp){
         master.clear();
