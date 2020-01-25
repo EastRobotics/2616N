@@ -12,3 +12,4 @@ typedef struct {
 
 void overTempWarning(void);
 void OTWarning_task(void * a);
+void showTemps(void * a);

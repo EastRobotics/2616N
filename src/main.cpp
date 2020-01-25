@@ -1,5 +1,5 @@
 #include "main.h"
-#include "overtemp.hpp"
+#include "motorTemps.hpp"
 #include "drive.hpp"
 
 /**
@@ -163,6 +163,7 @@ void precisionMode()
 
 void opcontrol() {
     pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
+    pros::Task tempShower (showTemps, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "tempShower");
 
     tray_mtr.move_voltage(3000);
     pros::delay(60);
@@ -192,7 +193,7 @@ void opcontrol() {
         // }
 
         //Vibration at certain test values
-        if (tray_mtr.get_position() <= 0) {
+        if (tray_mtr.get_position() <= -50) {
             controller.rumble("-");
             // tray_mtr.move_absolute(55, 50);
             // tray_mtr.tare_position();
