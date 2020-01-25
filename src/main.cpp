@@ -1,65 +1,6 @@
 #include "main.h"
-#include <vector>
-
-typedef enum {
-  DRIVE_FRONT_RIGHT = 11,
-  DRIVE_BACK_RIGHT=2,
-  DRIVE_FRONT_LEFT=20,
-  DRIVE_BACK_LEFT=8,
-  TRAY_ANGLE_ADJUSTOR=10,
-  LIFT_ADJUSTOR=9,
-  INTAKE_RIGHT=1,
-  INTAKE_LEFT= 7
-} motors;
-
-typedef enum {
-  SINGLE_STICK_ARCADE = 0,
-  DOUBLE_STICK_ARCADE, 
-  DOUBLE_STICK_TANK
-} driveMode;
-
-typedef struct {
-    std::string motorCode;
-    int temp;
-} motorCodeTemp;
-
-constexpr int DEADZONE_RADIUS = 25; //Circle about the origin
-constexpr int ANGLE_TOLERANCE = 5;  //Surrounding the axes +/-
-constexpr int DRIVE_MODE = SINGLE_STICK_ARCADE; //:)
-constexpr int MAX_VOLTAGE = 12000;
-constexpr int MIN_VOLTAGE = -12000;
-
-pros::Controller master(pros::E_CONTROLLER_MASTER);
-
-
-pros::Motor f_right_mtr(DRIVE_FRONT_RIGHT, pros::E_MOTOR_GEARSET_18, true);
-pros::Motor b_right_mtr(DRIVE_BACK_RIGHT, pros::E_MOTOR_GEARSET_18, true);
-pros::Motor f_left_mtr(DRIVE_FRONT_LEFT, pros::E_MOTOR_GEARSET_18, false);
-pros::Motor b_left_mtr(DRIVE_BACK_LEFT, pros::E_MOTOR_GEARSET_18, false);
-
-pros::Motor tray_mtr(TRAY_ANGLE_ADJUSTOR, pros::E_MOTOR_GEARSET_36, true);
-pros::Motor lift_mtr(LIFT_ADJUSTOR, pros::E_MOTOR_GEARSET_36, true);
-pros::Motor right_intake_mtr(INTAKE_RIGHT, pros::E_MOTOR_GEARSET_18, true);
-pros::Motor left_intake_mtr(INTAKE_LEFT, pros::E_MOTOR_GEARSET_18, false);
-
-int motorSlowdown=1;
-
-/**
- * A callback function for LLEMU's center button.
- *
- * When this callback is fired, it will toggle line 2 of the LCD text between
- * "I was pressed!" and nothing.
- */
-void on_center_button() {
-	static bool pressed = false;
-	pressed = !pressed;
-	if (pressed) {
-		pros::lcd::set_text(2, "I was pressed!");
-	} else {
-		pros::lcd::clear_line(2);
-	}
-}
-
+#include "overtemp.hpp"
+#include "drive.hpp"
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -68,22 +9,12 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-    
 	pros::lcd::initialize();
-	// pros::lcd::set_text(1, "Hello PROS User!");
 
     right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-
-    // trayTare();
-    // liftTare();
-    // tray_mtr.tare_position();
-	// pros::lcd::register_btn1_cb(on_center_button);
-    
-    //Deployment
-
 }
 
 /**
@@ -120,24 +51,15 @@ void competition_initialize() {
 
 void autonomous () {
     deploy();
-    // trayTare();
-    // liftTare();
-    // b_left_mtr.move_voltage(MAX_VOLTAGE);
-    // f_left_mtr.move_voltage(MAX_VOLTAGE);
-    // b_right_mtr.move_voltage(MAX_VOLTAGE);
-    // f_right_mtr.move_voltage(MAX_VOLTAGE);
-    // left_intake_mtr.move_voltage(MIN_VOLTAGE);
-    // right_intake_mtr.move_voltage(MIN_VOLTAGE);
-    // pros::delay(500);
-    b_left_mtr.move_voltage(MIN_VOLTAGE);
-    f_left_mtr.move_voltage(MIN_VOLTAGE);
-    b_right_mtr.move_voltage(MIN_VOLTAGE);
-    f_right_mtr.move_voltage(MIN_VOLTAGE);
+    b_left_mtr.move_voltage(MAX_BACKWARD);
+    f_left_mtr.move_voltage(MAX_BACKWARD);
+    b_right_mtr.move_voltage(MAX_BACKWARD);
+    f_right_mtr.move_voltage(MAX_BACKWARD);
     pros::delay(1000);
-    b_left_mtr.move_voltage(MAX_VOLTAGE);
-    f_left_mtr.move_voltage(MAX_VOLTAGE);
-    b_right_mtr.move_voltage(MAX_VOLTAGE);
-    f_right_mtr.move_voltage(MAX_VOLTAGE);
+    b_left_mtr.move_voltage(MAX_FORWARD);
+    f_left_mtr.move_voltage(MAX_FORWARD);
+    b_right_mtr.move_voltage(MAX_FORWARD);
+    f_right_mtr.move_voltage(MAX_FORWARD);
     pros::delay(250);
     b_left_mtr.move_voltage(0);
     f_left_mtr.move_voltage(0);
@@ -160,70 +82,18 @@ void autonomous () {
  * task, not resume it from where it left off.
  */
 
-void joystickDataFixer(int &x, int &y) {
-        double r = sqrt(pow(x, 2) + pow(y, 2));
-        if (r < DEADZONE_RADIUS)
-        {
-            x = 0;
-            y = 0;
-            return;
-        }
 
-        r = (r - DEADZONE_RADIUS) * 128 / (128.0 - DEADZONE_RADIUS);
-
-        double theta = (x < 0) * 180 + (180 / M_PI) * atan(y / (x * 1.0));
-        if (x == 0)
-        {
-            theta = 90 + 180 * (y < 0);
-            return;
-        }
-        if (theta < 0)
-            theta += 360;
-
-        x = round(r * cos(M_PI / 180 * theta));
-        y = round(r * sin(M_PI / 180 * theta));
-}
-
-void liftTare()
-{
-    int slowSpeed = MIN_VOLTAGE/2;
-    lift_mtr.tare_position();
-    double pos = lift_mtr.get_position();
-    do {
-        pos = lift_mtr.get_position();
-        lift_mtr.move_voltage(slowSpeed);
-        pros::delay(20);
-    } while (pos != lift_mtr.get_position());
-    lift_mtr.move_voltage(0);
-    lift_mtr.tare_position();
-}
-
-void trayTare()
-{
-    int slowSpeed = MAX_VOLTAGE/2;
-
-
-    do {    
-        // pos = tray_mtr.get_position();
-        tray_mtr.move_velocity(slowSpeed);
-        pros::delay(20);
-        tray_mtr.move_velocity(0);
-        pros::delay(20);
-    // } while (pos != tray_mtr.get_position())
-    } while (tray_mtr.get_actual_velocity());
-    tray_mtr.tare_position();
-
-}
 
 void deploy()
 {
-    tray_mtr.move_voltage(MIN_VOLTAGE/10);
-    lift_mtr.move_voltage(MIN_VOLTAGE/10);
-    intake(MIN_VOLTAGE);
-    f_right_mtr.move_voltage(MAX_VOLTAGE);
-    b_right_mtr.move_voltage(MAX_VOLTAGE);
-    f_left_mtr.move_voltage(MAX_VOLTAGE);
-    b_left_mtr.move_voltage(MAX_VOLTAGE);
+    tray_mtr.move_voltage(MAX_BACKWARD/10);
+    lift_mtr.move_voltage(MAX_BACKWARD/10);
+    left_intake_mtr.move_voltage(MAX_BACKWARD);
+    right_intake_mtr.move_voltage(MAX_BACKWARD);
+    f_right_mtr.move_voltage(MAX_FORWARD);
+    b_right_mtr.move_voltage(MAX_FORWARD);
+    f_left_mtr.move_voltage(MAX_FORWARD);
+    b_left_mtr.move_voltage(MAX_FORWARD);
     pros::delay(200);
     f_right_mtr.move_voltage(0);
     b_right_mtr.move_voltage(0);
@@ -232,206 +102,64 @@ void deploy()
     pros::delay(1000);
     tray_mtr.move_voltage(0);
     lift_mtr.move_voltage(0);
-    intake(0);
-}
-
-void robotDrive()
-{
-    int y = 0;
-    int x = 0;
-    int left = 0;
-    int right = 0;
-    switch(DRIVE_MODE) {
-        case SINGLE_STICK_ARCADE:
-            y = master.get_analog(ANALOG_LEFT_Y)/motorSlowdown;
-            x = master.get_analog(ANALOG_LEFT_X)/motorSlowdown;
-            joystickDataFixer(x, y);
-
-            f_left_mtr = y + x;
-            f_right_mtr = y - x;
-            b_left_mtr = y + x;
-            b_right_mtr = y - x;
-            break;
-        case DOUBLE_STICK_ARCADE:
-            y = master.get_analog(ANALOG_LEFT_Y)/motorSlowdown;
-            x = master.get_analog(ANALOG_RIGHT_X)/motorSlowdown;
-
-            f_left_mtr = y + x;
-            f_right_mtr = y - x;
-            b_left_mtr = y + x;
-            b_right_mtr = y - x;
-            break;
-        case DOUBLE_STICK_TANK:
-            left = master.get_analog(ANALOG_LEFT_Y)/motorSlowdown;
-            right = master.get_analog(ANALOG_RIGHT_Y)/motorSlowdown;
-
-            f_left_mtr = left;
-            f_right_mtr = right;
-            b_left_mtr = left;
-            b_right_mtr = right;
-            break;
-    }
+    left_intake_mtr.move_voltage(0);
+    right_intake_mtr.move_voltage(0);
 }
 
 
 void liftController()
 {
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-        lift_mtr.move_voltage(MAX_VOLTAGE/motorSlowdown);
+    if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+        lift_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
         if (tray_mtr.get_position() < 1300) {
-            tray_mtr.move_voltage(MAX_VOLTAGE/motorSlowdown);
+            tray_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
         }
-    } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-        if(lift_mtr.get_position() < 1300 && tray_mtr.get_position() > 30) {
+    } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+        if(lift_mtr.get_position() < 1300 && tray_mtr.get_position() > TRAY_STOP) {
             tray_mtr.move_voltage(-8000/motorSlowdown);
         }
-        lift_mtr.move_voltage(MIN_VOLTAGE);
+        lift_mtr.move_voltage(MAX_BACKWARD);
     } else {
         lift_mtr.move_voltage(0);
     }
 
 }
 
-void intakeController()
+void intakes()
 {
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-        intake(MAX_VOLTAGE);
-    } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-        intake(MIN_VOLTAGE);
-    } else if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-        intake(0);
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+        right_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
+        left_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);   
+    } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+        right_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
+        left_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
+    } else if(!controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && !controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+        right_intake_mtr.move_voltage(0);
+        left_intake_mtr.move_voltage(0);
     }
 }
 
 void tray()
 {
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-        tray_mtr.move_voltage(MAX_VOLTAGE/motorSlowdown);
-    } else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > 200) {
-        tray_mtr.move_voltage(MIN_VOLTAGE/motorSlowdown);
-    }
-    
-     else {
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+        tray_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
+    } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > TRAY_STOP) {
+        tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
+    } else {
         tray_mtr.move_voltage(0);
     }
 }
 
 void precisionMode()
 {
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Slow down
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) //Slow down
         motorSlowdown = 2;
-    } else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) { //Reset to default, no slowdown
+    else //Reset to default, no slowdown
         motorSlowdown = 1;
-    }
 }
 
-void intake(int voltage)
-{
-    right_intake_mtr.move_voltage(voltage/motorSlowdown);
-    left_intake_mtr.move_voltage(voltage/motorSlowdown);
-}
 
-void overTempWarning()
-{
-    constexpr int tempLimit = 50;
-    std::vector<motorCodeTemp> overTempMotors;
-    int temp;
-    static bool overTempStatic;
-    bool overTemp = false;
-    if ((temp = b_left_mtr.get_temperature()) >= tempLimit) {
-        if (!overTempStatic)
-            master.rumble("...");
-        overTempMotors.insert(overTempMotors.end(), {"BL", (int)b_left_mtr.get_temperature()});
-        overTempStatic = true;
-        overTemp = true;
-    }
-    if ((temp = f_left_mtr.get_temperature()) >= tempLimit) {
-        if (!overTempStatic)
-            master.rumble("...");
-        overTempMotors.insert(overTempMotors.end(), {"FL", (int)f_left_mtr.get_temperature()});
-        overTempStatic = true;
-        overTemp = true;
-    }
-    if ((temp = b_right_mtr.get_temperature()) >= tempLimit) {
-        if (!overTempStatic)
-            master.rumble("...");
-        overTempMotors.insert(overTempMotors.end(), {"BR", (int)b_right_mtr.get_temperature()});
-        overTempStatic = true;
-        overTemp = true;
-    }
-    if ((temp = f_right_mtr.get_temperature()) >= tempLimit) {
-        if (!overTempStatic)
-            master.rumble("...");
-        overTempMotors.insert(overTempMotors.end(), {"FR", (int)f_right_mtr.get_temperature()});
-        overTempStatic = true;
-        overTemp = true;
-    }
-    if ((temp = tray_mtr.get_temperature()) >= tempLimit) {
-        if (!overTempStatic)
-            master.rumble("...");
-        overTempMotors.insert(overTempMotors.end(), {"TR", (int)tray_mtr.get_temperature()});
-        overTempStatic = true;
-        overTemp = true;
-    }
-    if ((temp = lift_mtr.get_temperature()) >= tempLimit) {
-        if (!overTempStatic)
-            master.rumble("...");
-        overTempMotors.insert(overTempMotors.end(), {"LT", (int)lift_mtr.get_temperature()});
-        overTempStatic = true;
-        overTemp = true;
-    }
-    if ((temp = left_intake_mtr.get_temperature()) >= tempLimit) {
-        if (!overTempStatic)
-            master.rumble("...");
-        overTempMotors.insert(overTempMotors.end(), {"LI", (int)left_intake_mtr.get_temperature()});
-        overTempStatic = true;
-        overTemp = true;
-    }
-    if ((temp = right_intake_mtr.get_temperature()) >= tempLimit) {
-        if (!overTempStatic)
-            master.rumble("...");
-        overTempMotors.insert(overTempMotors.end(), {"RI", (int)right_intake_mtr.get_temperature()});
-        overTempStatic = true;
-        overTemp = true;
-    }
-    overTempStatic = overTemp;
-    if (overTemp){
-        master.clear();
-        pros::delay(50);
-        std::vector<std::string> buffer;
-        for (auto& i : overTempMotors)
-            buffer.insert(buffer.end(), i.motorCode + " - " + std::to_string(i.temp));
 
-        if (buffer.size() % 2 == 0 && buffer.size() <= 6) {
-            for (int i = 0; i < buffer.size(); i += 2) {
-                std::string str = buffer[i] + ' ' + buffer[i+1];
-                master.set_text(i / 2, 0, str.c_str());
-                pros::delay(50);
-            }
-        } else if (buffer.size() <= 5) {
-            for (int i = 0; i < buffer.size() - 1; i += 2) {
-                std::string str = buffer[i] + ' ' + buffer[i+1];
-                master.set_text(i / 2, 0, str.c_str());
-                pros::delay(50);
-            }
-            master.set_text(2, 0, buffer.back().c_str());
-            pros::delay(50);
-        } else
-            master.set_text(1, 0, "ALL MOTORS DEAD");
-            pros::delay(50);
-        
-
-    } else
-        master.clear();
-        pros::delay(50);
-}
-
-void OTWarning_task(void * a) {
-    while (true) {
-        overTempWarning();
-        pros::delay(500);
-    }
-}
 
 void opcontrol() {
     pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
@@ -440,8 +168,8 @@ void opcontrol() {
     pros::delay(60);
     tray_mtr.move_voltage(0);
 	while (true) {
-    	robotDrive();
-        intakeController();
+    	drive();
+        intakes();
         tray();
         liftController();
         precisionMode();
@@ -454,23 +182,23 @@ void opcontrol() {
         //-------------------- DEBUG SECTION -----------------
 
         //Deployment
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
             deploy();
 
         //Manual tareing
-        // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+        // if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
         //     tray_mtr.tare_position();
         //     lift_mtr.tare_position();
         // }
 
         //Vibration at certain test values
         if (tray_mtr.get_position() <= 0) {
-            master.rumble("-");
+            controller.rumble("-");
             // tray_mtr.move_absolute(55, 50);
             // tray_mtr.tare_position();
         }
 
-        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN) && !pros::competition::is_connected())
+        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN) && !pros::competition::is_connected())
             autonomous();
 
         pros::delay(20);
