@@ -32,32 +32,32 @@ void drive()
     int right = 0;
     switch(DRIVE_MODE) {
         case SINGLE_STICK_ARCADE:
-            y = controller.get_analog(ANALOG_LEFT_Y)/motorSlowdown;
-            x = controller.get_analog(ANALOG_LEFT_X)/motorSlowdown;
+            y = controller.get_analog(ANALOG_LEFT_Y);
+            x = controller.get_analog(ANALOG_LEFT_X);
             joystickDataFixer(x, y);
 
-            f_left_mtr = y + x;
-            f_right_mtr = y - x;
-            b_left_mtr = y + x;
-            b_right_mtr = y - x;
+            f_left_mtr = (y + x)/motorSlowdown;
+            f_right_mtr = (y - x)/motorSlowdown;
+            b_left_mtr = (y + x)/motorSlowdown;
+            b_right_mtr = (y - x)/motorSlowdown;
             break;
         case DOUBLE_STICK_ARCADE:
-            y = controller.get_analog(ANALOG_LEFT_Y)/motorSlowdown;
-            x = controller.get_analog(ANALOG_RIGHT_X)/motorSlowdown;
+            y = controller.get_analog(ANALOG_LEFT_Y);
+            x = controller.get_analog(ANALOG_RIGHT_X);
 
-            f_left_mtr = y + x;
-            f_right_mtr = y - x;
-            b_left_mtr = y + x;
-            b_right_mtr = y - x;
+            f_left_mtr = (y + x)/motorSlowdown;
+            f_right_mtr = (y - x)/motorSlowdown;
+            b_left_mtr = (y + x)/motorSlowdown;
+            b_right_mtr = (y - x)/motorSlowdown;
             break;
         case DOUBLE_STICK_TANK:
-            left = controller.get_analog(ANALOG_LEFT_Y)/motorSlowdown;
-            right = controller.get_analog(ANALOG_RIGHT_Y)/motorSlowdown;
+            left = controller.get_analog(ANALOG_LEFT_Y);
+            right = controller.get_analog(ANALOG_RIGHT_Y);
 
-            f_left_mtr = left;
-            f_right_mtr = right;
-            b_left_mtr = left;
-            b_right_mtr = right;
+            f_left_mtr = left/motorSlowdown;
+            f_right_mtr = right/motorSlowdown;
+            b_left_mtr = left/motorSlowdown;
+            b_right_mtr = right/motorSlowdown;
             break;
     }
 }

@@ -2,6 +2,10 @@
 #include "motorTemps.hpp"
 #include "drive.hpp"
 
+
+pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
+pros::Task tempShower (showTemps, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "tempShower");
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -15,6 +19,7 @@ void initialize() {
     left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+
 }
 
 /**
@@ -56,11 +61,11 @@ void autonomous () {
     b_right_mtr.move_voltage(MAX_BACKWARD/2);
     f_right_mtr.move_voltage(MAX_BACKWARD/2);
     pros::delay(1800);
-    b_left_mtr.move_voltage(MAX_FORWARD);
-    f_left_mtr.move_voltage(MAX_FORWARD);
-    b_right_mtr.move_voltage(MAX_FORWARD);
-    f_right_mtr.move_voltage(MAX_FORWARD);
-    pros::delay(500);
+    b_left_mtr.move_voltage(MAX_FORWARD/2);
+    f_left_mtr.move_voltage(MAX_FORWARD/2);
+    b_right_mtr.move_voltage(MAX_FORWARD/2);
+    f_right_mtr.move_voltage(MAX_FORWARD/2);
+    pros::delay(850);
     b_left_mtr.move_voltage(0);
     f_left_mtr.move_voltage(0);
     b_right_mtr.move_voltage(0);
@@ -82,31 +87,39 @@ void autonomous () {
  * task, not resume it from where it left off.
  */
 
-
-
 void deploy()
 {
-    
     left_intake_mtr.move_voltage(MAX_BACKWARD);
     right_intake_mtr.move_voltage(MAX_BACKWARD);
+    
+    // Lift up, tray up until its out of the lift's way then stop
     lift_mtr.move_voltage(MAX_FORWARD);
-    while (tray_mtr.get_position() < 1300) {
+    for (int i = 0; i < 100 && tray_mtr.get_position() < 1300; i++) {
         tray_mtr.move_voltage(MAX_FORWARD);
+        pros::delay(20);
     }
     tray_mtr.move_voltage(0);
     pros::delay(100);
-    while (lift_mtr.get_position() > 10)
+
+    // Lift back down
+    for (int i = 0; i < 100 && lift_mtr.get_position() > 10; i++) {
         lift_mtr.move_voltage(MAX_BACKWARD);
+        pros::delay(20);
+    }
     lift_mtr.move_voltage(0);
-    
-    while (tray_mtr.get_position() > TRAY_STOP)
+
+    // Tray back down
+    for (int i = 0; i < 100 && tray_mtr.get_position() > TRAY_STOP; i++) {
         tray_mtr.move_voltage(MAX_BACKWARD);
+        pros::delay(20);
+    }
     tray_mtr.move_voltage(0);
 
-    f_right_mtr.move_voltage(MAX_FORWARD);
-    b_right_mtr.move_voltage(MAX_FORWARD);
-    f_left_mtr.move_voltage(MAX_FORWARD);
-    b_left_mtr.move_voltage(MAX_FORWARD);
+    // Antitip release
+    f_right_mtr.move_voltage(8000);
+    b_right_mtr.move_voltage(8000);
+    f_left_mtr.move_voltage(8000);
+    b_left_mtr.move_voltage(8000);
     pros::delay(200);
     f_right_mtr.move_voltage(0);
     b_right_mtr.move_voltage(0);
@@ -114,8 +127,6 @@ void deploy()
     b_left_mtr.move_voltage(0);
     left_intake_mtr.move_voltage(0);
     right_intake_mtr.move_voltage(0);
-
-
 }
 
 
@@ -164,6 +175,7 @@ void tray()
 
 void precisionMode()
 {
+    motorSlowdown = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A) ? 2 : 1;
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) //Slow down
         motorSlowdown = 2;
     else //Reset to default, no slowdown
@@ -174,18 +186,18 @@ void precisionMode()
 
 
 void opcontrol() {
-    pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
-    pros::Task tempShower (showTemps, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "tempShower");
 
     tray_mtr.move_voltage(3000);
-    pros::delay(60);
+    pros::delay(120);
     tray_mtr.move_voltage(0);
 	while (true) {
     	drive();
         intakes();
         tray();
         liftController();
-        precisionMode();
+        
+        motorSlowdown = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A) ? 2 : 1;
+
         
         auto str = std::to_string(lift_mtr.get_position());
         pros::lcd::set_text(2, "Lift motor: "+ str);
