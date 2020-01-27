@@ -51,16 +51,16 @@ void competition_initialize() {
 
 void autonomous () {
     deploy();
-    b_left_mtr.move_voltage(MAX_BACKWARD);
-    f_left_mtr.move_voltage(MAX_BACKWARD);
-    b_right_mtr.move_voltage(MAX_BACKWARD);
-    f_right_mtr.move_voltage(MAX_BACKWARD);
-    pros::delay(1000);
+    b_left_mtr.move_voltage(MAX_BACKWARD/2);
+    f_left_mtr.move_voltage(MAX_BACKWARD/2);
+    b_right_mtr.move_voltage(MAX_BACKWARD/2);
+    f_right_mtr.move_voltage(MAX_BACKWARD/2);
+    pros::delay(1800);
     b_left_mtr.move_voltage(MAX_FORWARD);
     f_left_mtr.move_voltage(MAX_FORWARD);
     b_right_mtr.move_voltage(MAX_FORWARD);
     f_right_mtr.move_voltage(MAX_FORWARD);
-    pros::delay(250);
+    pros::delay(500);
     b_left_mtr.move_voltage(0);
     f_left_mtr.move_voltage(0);
     b_right_mtr.move_voltage(0);
@@ -86,10 +86,23 @@ void autonomous () {
 
 void deploy()
 {
-    tray_mtr.move_voltage(MAX_BACKWARD/10);
-    lift_mtr.move_voltage(MAX_BACKWARD/10);
+    
     left_intake_mtr.move_voltage(MAX_BACKWARD);
     right_intake_mtr.move_voltage(MAX_BACKWARD);
+    lift_mtr.move_voltage(MAX_FORWARD);
+    while (tray_mtr.get_position() < 1300) {
+        tray_mtr.move_voltage(MAX_FORWARD);
+    }
+    tray_mtr.move_voltage(0);
+    pros::delay(100);
+    while (lift_mtr.get_position() > 10)
+        lift_mtr.move_voltage(MAX_BACKWARD);
+    lift_mtr.move_voltage(0);
+    
+    while (tray_mtr.get_position() > TRAY_STOP)
+        tray_mtr.move_voltage(MAX_BACKWARD);
+    tray_mtr.move_voltage(0);
+
     f_right_mtr.move_voltage(MAX_FORWARD);
     b_right_mtr.move_voltage(MAX_FORWARD);
     f_left_mtr.move_voltage(MAX_FORWARD);
@@ -99,11 +112,10 @@ void deploy()
     b_right_mtr.move_voltage(0);
     f_left_mtr.move_voltage(0);
     b_left_mtr.move_voltage(0);
-    pros::delay(1000);
-    tray_mtr.move_voltage(0);
-    lift_mtr.move_voltage(0);
     left_intake_mtr.move_voltage(0);
     right_intake_mtr.move_voltage(0);
+
+
 }
 
 
