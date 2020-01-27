@@ -3,9 +3,8 @@
 #define GENERAL_HPP
 
 void deploy(void);
-void liftController(void);
-void intake(int voltage);
-void intakeController(void);
+void lift(void);
+void intakes(int voltage);
 void tray(void * a);
 
 typedef enum {

@@ -2,13 +2,13 @@
 #include "general.hpp"
 
 pros::Mutex mutexControllerScreen;
-char blank[] = "                 ";
+constexpr char blankStr[] = "                 ";
 constexpr int tempLimit = 55;
 const std::vector<motorCode> motorCodes = 
         {
-            {&b_left_mtr, "BL"}, {&f_left_mtr, "FL"},
-            {&b_right_mtr, "BR"}, {&f_right_mtr, "FR"},
-            {&lift_mtr, "LT"}, {&tray_mtr, "TR"},
+            {&b_left_mtr, "BL"},      {&f_left_mtr, "FL"},
+            {&b_right_mtr, "BR"},     {&f_right_mtr, "FR"},
+            {&lift_mtr, "LT"},        {&tray_mtr, "TR"},
             {&left_intake_mtr, "LI"}, {&right_intake_mtr, "RI"}
         };
 
@@ -32,11 +32,11 @@ void overTempWarning()
 
     mutexControllerScreen.take(TIMEOUT_MAX);
     if (overTemp){
-        controller.set_text(0, 0, blank);
+        controller.set_text(0, 0, blankStr);
         pros::delay(50);
-        controller.set_text(1, 0, blank);
+        controller.set_text(1, 0, blankStr);
         pros::delay(50);
-        controller.set_text(2, 0, blank);
+        controller.set_text(2, 0, blankStr);
         pros::delay(50);
         std::vector<std::string> buffer;
         for (auto& i : overTempMotors)
@@ -98,11 +98,11 @@ void showTemps(void * a) {
             released = true;
         }
         if (released){
-            controller.set_text(0, 0, blank);
+            controller.set_text(0, 0, blankStr);
             pros::delay(50);
-            controller.set_text(1, 0, blank);
+            controller.set_text(1, 0, blankStr);
             pros::delay(50);
-            controller.set_text(2, 0, blank);
+            controller.set_text(2, 0, blankStr);
             pros::delay(50);
         }
         controller.print(0, 0, "Battery - %d%%", (int)pros::battery::get_capacity());
