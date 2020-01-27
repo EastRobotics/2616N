@@ -2,14 +2,11 @@
 #ifndef GENERAL_HPP
 #define GENERAL_HPP
 
-// #include "main.h"
-
 void deploy(void);
 void liftController(void);
 void intake(int voltage);
 void intakeController(void);
-void tray(void);
-void precisionMode(void);
+void tray(void * a);
 
 typedef enum {
   DRIVE_FRONT_RIGHT = 11,

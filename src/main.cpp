@@ -12,7 +12,8 @@ pros::Task tempShower (showTemps, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_ST
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
-void initialize() {
+void initialize()
+{
 	pros::lcd::initialize();
 
     right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
@@ -162,44 +163,54 @@ void intakes()
     }
 }
 
-void tray()
-{
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-        tray_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
-    } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > TRAY_STOP) {
-        tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
-    } else {
-        tray_mtr.move_voltage(0);
+#define NEW_TRAY_RETURN
+void tray(void * a)
+{   
+    while (true) {
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+            tray_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
+
+        #ifdef NEW_TRAY_RETURN
+        } else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
+            // Quickly close to down
+            while (tray_mtr.get_position() > TRAY_STOP + 500) {
+                tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
+                pros::delay(20);
+            }
+            // Slowly the rest of the way
+            while (tray_mtr.get_position() > TRAY_STOP) {
+                tray_mtr.move_voltage(-4000/motorSlowdown);
+                pros::delay(20);
+            }
+            tray_mtr.move_voltage(0);
+        #else
+        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > TRAY_STOP) {
+            tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
+        #endif
+
+        } else {
+            tray_mtr.move_voltage(0);
+        }
+        pros::delay(30);
     }
 }
-
-void precisionMode()
-{
-    motorSlowdown = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A) ? 2 : 1;
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) //Slow down
-        motorSlowdown = 2;
-    else //Reset to default, no slowdown
-        motorSlowdown = 1;
-}
-
-
-
 
 void opcontrol() {
 
     tray_mtr.move_voltage(3000);
     pros::delay(120);
     tray_mtr.move_voltage(0);
+
+    pros::Task trayTask (tray, (void *)"", TASK_PRIORITY_DEFAULT + 2, TASK_STACK_DEPTH_DEFAULT, "trayTask");
+
 	while (true) {
     	drive();
         intakes();
-        tray();
         liftController();
         
         motorSlowdown = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A) ? 2 : 1;
 
-        
-        auto str = std::to_string(lift_mtr.get_position());
+        std::string str = std::to_string(lift_mtr.get_position());
         pros::lcd::set_text(2, "Lift motor: "+ str);
         str = std::to_string(tray_mtr.get_position());
         pros::lcd::set_text(3, "Tray motor: "+str);
@@ -210,17 +221,9 @@ void opcontrol() {
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
             deploy();
 
-        //Manual tareing
-        // if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
-        //     tray_mtr.tare_position();
-        //     lift_mtr.tare_position();
-        // }
-
         //Vibration at certain test values
         if (tray_mtr.get_position() <= -50) {
             controller.rumble("-");
-            // tray_mtr.move_absolute(55, 50);
-            // tray_mtr.tare_position();
         }
 
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN) && !pros::competition::is_connected())
