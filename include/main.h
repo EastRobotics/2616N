@@ -34,7 +34,6 @@
  */
 #define PROS_USE_LITERALS
 
-
 #include "math.h"
 #include "pros/motors.hpp"
 #include "pros/apix.h" 

@@ -14,12 +14,13 @@ pros::Task tempShower (showTemps, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_ST
  */
 void initialize()
 {
-    pros::lcd::initialize();
+	pros::lcd::initialize();
 
     right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+
 }
 
 /**
@@ -130,19 +131,22 @@ void deploy()
 }
 
 
-void lift()
+void liftController()
 {
-    int pos;
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+    if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
         lift_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
-        if (tray_mtr.get_position() < 1300)
+        if (tray_mtr.get_position() < 1300) {
             tray_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
+        }
     } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-        if ((pos = tray_mtr.get_position()) < 1300 && pos > TRAY_STOP)
+        if(lift_mtr.get_position() < 1300 && tray_mtr.get_position() > TRAY_STOP) {
             tray_mtr.move_voltage(-8000/motorSlowdown);
-        lift_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
-    } else
+        }
+        lift_mtr.move_voltage(MAX_BACKWARD);
+    } else {
         lift_mtr.move_voltage(0);
+    }
+
 }
 
 void intakes()
@@ -153,16 +157,15 @@ void intakes()
     } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
         right_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
         left_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
-    } else {
+    } else if(!controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && !controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
         right_intake_mtr.move_voltage(0);
         left_intake_mtr.move_voltage(0);
     }
 }
 
-
 #define NEW_TRAY_RETURN
 void tray(void * a)
-{
+{   
     while (true) {
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
             tray_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
@@ -203,7 +206,7 @@ void opcontrol() {
 	while (true) {
     	drive();
         intakes();
-        lift();
+        liftController();
         
         motorSlowdown = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A) ? 2 : 1;
 
@@ -211,6 +214,8 @@ void opcontrol() {
         pros::lcd::set_text(2, "Lift motor: "+ str);
         str = std::to_string(tray_mtr.get_position());
         pros::lcd::set_text(3, "Tray motor: "+str);
+
+        //-------------------- DEBUG SECTION -----------------
 
         //Deployment
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
