@@ -38,7 +38,7 @@
 #include "math.h"
 #include "pros/motors.hpp"
 #include "pros/apix.h" 
-#include "../src/general.hpp"
+#include "general.hpp"
 
 /**
  * You should add more #includes here

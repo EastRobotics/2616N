@@ -90,10 +90,9 @@ void showTemps(void * a) {
             }
             controller.print(1, 0, "TR - %d LT - %d",
                     (int)tray_mtr.get_temperature(), (int)lift_mtr.get_temperature());
-                pros::delay(75);
+            pros::delay(75);
             controller.print(2, 0, "LI - %d RT - %d",
                     (int)left_intake_mtr.get_temperature(), (int)right_intake_mtr.get_temperature());
-                pros::delay(75);
             pros::delay(500);
             released = true;
         }
