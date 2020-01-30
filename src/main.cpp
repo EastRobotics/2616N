@@ -2,6 +2,7 @@
 #include "motorTemps.hpp"
 #include "drive.hpp"
 
+#define NEW_TRAY_RETURN
 
 pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
 pros::Task tempShower (showTemps, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "tempShower");
@@ -129,38 +130,25 @@ void deploy()
     right_intake_mtr.move_voltage(0);
 }
 
-
+bool liftInUse = false;
 void lift()
 {
     int pos;
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+        liftInUse = true;
         lift_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
         if (tray_mtr.get_position() < 1300)
             tray_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
     } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+        liftInUse = true;
         if ((pos = tray_mtr.get_position()) < 1300 && pos > TRAY_STOP)
             tray_mtr.move_voltage(-8000/motorSlowdown);
         lift_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
     } else
+        liftInUse = false;
         lift_mtr.move_voltage(0);
 }
 
-void intakes()
-{
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-        right_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
-        left_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);   
-    } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-        right_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
-        left_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
-    } else {
-        right_intake_mtr.move_voltage(0);
-        left_intake_mtr.move_voltage(0);
-    }
-}
-
-
-#define NEW_TRAY_RETURN
 void tray(void * a)
 {
     while (true) {
@@ -169,11 +157,28 @@ void tray(void * a)
 
         #ifdef NEW_TRAY_RETURN
         } else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
+            
+            // Lift out of the way
+            while (lift_mtr.get_position() < 200 && !liftInUse) {
+                lift_mtr.move_voltage(6000/motorSlowdown);
+                pros::delay(20);
+            }
+            lift_mtr.move_voltage(0);
+
             // Quickly close to down
             while (tray_mtr.get_position() > TRAY_STOP + 500) {
                 tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
                 pros::delay(20);
             }
+            tray_mtr.move_voltage(-4000/motorSlowdown);
+
+            // Lift back down
+            while (lift_mtr.get_position() > 10 && !liftInUse) {
+                lift_mtr.move_voltage(-6000/motorSlowdown);
+                pros::delay(20);
+            }
+            lift_mtr.move_voltage(0);
+
             // Slowly the rest of the way
             while (tray_mtr.get_position() > TRAY_STOP) {
                 tray_mtr.move_voltage(-4000/motorSlowdown);
@@ -191,6 +196,21 @@ void tray(void * a)
         pros::delay(30);
     }
 }
+
+void intakes()
+{
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+        right_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
+        left_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);   
+    } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+        right_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
+        left_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
+    } else {
+        right_intake_mtr.move_voltage(0);
+        left_intake_mtr.move_voltage(0);
+    }
+}
+
 
 void opcontrol() {
 
