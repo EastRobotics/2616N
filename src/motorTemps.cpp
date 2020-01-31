@@ -91,7 +91,7 @@ void showTemps(void * a) {
             controller.print(1, 0, "TR - %d LT - %d",
                     (int)tray_mtr.get_temperature(), (int)lift_mtr.get_temperature());
             pros::delay(75);
-            controller.print(2, 0, "LI - %d RT - %d",
+            controller.print(2, 0, "LI - %d RI - %d",
                     (int)left_intake_mtr.get_temperature(), (int)right_intake_mtr.get_temperature());
             pros::delay(500);
             released = true;
@@ -108,7 +108,7 @@ void showTemps(void * a) {
         pros::delay(50);
         controller.print(1, 0, "Cont Bat - %d%%", controller.get_battery_capacity());
         pros::delay(50);
-        controller.set_text(2, 3, "Hi Thomas!!");
+        controller.set_text(2, 3, "Hi!!!");
         mutexControllerScreen.give();
         pros::delay(350);
     }

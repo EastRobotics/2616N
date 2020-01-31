@@ -2,7 +2,7 @@
 #include "motorTemps.hpp"
 #include "drive.hpp"
 
-#define NEW_TRAY_RETURN
+// #define NEW_TRAY_RETURN
 
 pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
 pros::Task tempShower (showTemps, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "tempShower");
@@ -133,20 +133,22 @@ void deploy()
 bool liftInUse = false;
 void lift()
 {
-    int pos;
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+    if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
         liftInUse = true;
         lift_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
-        if (tray_mtr.get_position() < 1300)
+        if (tray_mtr.get_position() < 1300) {
             tray_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
+        }
     } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
         liftInUse = true;
-        if ((pos = tray_mtr.get_position()) < 1300 && pos > TRAY_STOP)
+        if(lift_mtr.get_position() < 1300 && tray_mtr.get_position() > TRAY_STOP) {
             tray_mtr.move_voltage(-8000/motorSlowdown);
-        lift_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
-    } else
+        }
+        lift_mtr.move_voltage(MAX_BACKWARD);
+    } else {
         liftInUse = false;
         lift_mtr.move_voltage(0);
+    }
 }
 
 void tray(void * a)
