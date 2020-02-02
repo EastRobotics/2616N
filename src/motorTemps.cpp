@@ -2,7 +2,6 @@
 #include "general.hpp"
 
 pros::Mutex mutexControllerScreen;
-constexpr char blankStr[] = "                 ";
 constexpr int tempLimit = 55;
 const std::vector<motorCode> motorCodes = 
         {
@@ -32,33 +31,35 @@ void overTempWarning()
 
     mutexControllerScreen.take(TIMEOUT_MAX);
     if (overTemp){
-        controller.set_text(0, 0, blankStr);
-        pros::delay(50);
-        controller.set_text(1, 0, blankStr);
-        pros::delay(50);
-        controller.set_text(2, 0, blankStr);
+        controller.clear();
         pros::delay(50);
         std::vector<std::string> buffer;
         for (auto& i : overTempMotors)
             buffer.insert(buffer.end(), i.code + " - " + std::to_string(i.motor->get_temperature()));
 
-        if (buffer.size() % 2 == 0 && buffer.size() <= 6) {
-            for (int i = 0; i < buffer.size(); i += 2) {
+        if (buffer.size() <= 6) {
+            if (buffer.size() % 2 == 0) {
+                for (int i = 0; i < buffer.size(); i += 2) {
+                    std::string str = buffer[i] + ' ' + buffer[i+1];
+                    controller.set_text(i / 2, 0, str.c_str());
+                    pros::delay(50);
+                }
+            } else {
+                for (int i = 0; i < buffer.size() - 1; i += 2) {
+                    std::string str = buffer[i] + ' ' + buffer[i+1];
+                    controller.set_text(i / 2, 0, str.c_str());
+                    pros::delay(50);
+                }
+                controller.set_text(((buffer.size() - 1) / 2), 0, buffer[4].c_str());
+                pros::delay(50);
+            }
+        } else {
+            for (int i = 0; i < 6; i += 2) {
                 std::string str = buffer[i] + ' ' + buffer[i+1];
                 controller.set_text(i / 2, 0, str.c_str());
                 pros::delay(50);
             }
-        } else if (buffer.size() <= 5) {
-            for (int i = 0; i < buffer.size() - 1; i += 2) {
-                std::string str = buffer[i] + ' ' + buffer[i+1];
-                controller.set_text(i / 2, 0, str.c_str());
-                pros::delay(50);
-            }
-            controller.set_text((buffer.size()-1) / 2, 0, buffer.back().c_str());
-            pros::delay(50);
-        } else
-            controller.set_text(1, 0, "ALL MOTORS DEAD");
-            pros::delay(50);
+        }
     }
     mutexControllerScreen.give();
 }
@@ -77,6 +78,8 @@ void showTemps(void * a) {
         count = 0;
         released = false;
         mutexControllerScreen.take(TIMEOUT_MAX);
+        controller.clear();
+        pros::delay(50);
         while (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
             count++;
             if (count % 4 <= 1) {
@@ -97,18 +100,14 @@ void showTemps(void * a) {
             released = true;
         }
         if (released){
-            controller.set_text(0, 0, blankStr);
-            pros::delay(50);
-            controller.set_text(1, 0, blankStr);
-            pros::delay(50);
-            controller.set_text(2, 0, blankStr);
+            controller.clear();
             pros::delay(50);
         }
         controller.print(0, 0, "Battery - %d%%", (int)pros::battery::get_capacity());
         pros::delay(50);
         controller.print(1, 0, "Cont Bat - %d%%", controller.get_battery_capacity());
         pros::delay(50);
-        controller.set_text(2, 3, "Hi!!!");
+        controller.set_text(2, 0, "-_-_-_-_-_-_-_-");
         mutexControllerScreen.give();
         pros::delay(350);
     }

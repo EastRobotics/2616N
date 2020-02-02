@@ -94,7 +94,7 @@ void deploy()
     right_intake_mtr.move_voltage(MAX_BACKWARD);
     
     // Lift up, tray up until its out of the lift's way then stop
-    lift_mtr.move_voltage(MAX_FORWARD);
+    lift_mtr.move_voltage(5500);
     for (int i = 0; i < 100 && tray_mtr.get_position() < 1300; i++) {
         tray_mtr.move_voltage(MAX_FORWARD);
         pros::delay(20);
