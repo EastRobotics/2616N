@@ -1,6 +1,7 @@
 #pragma once
 #ifndef GENERAL_HPP
 #define GENERAL_HPP
+#include "betterController.hpp"
 
 void deploy(void);
 void lift(void);
@@ -31,7 +32,7 @@ constexpr double M_PI = 3.14159265358979323846;
 
 static int motorSlowdown = 1;
 
-static pros::Controller controller(pros::E_CONTROLLER_MASTER);
+static betterController controller(pros::E_CONTROLLER_MASTER);
 
 static pros::Motor f_right_mtr(DRIVE_FRONT_RIGHT, pros::E_MOTOR_GEARSET_18, true);
 static pros::Motor b_right_mtr(DRIVE_BACK_RIGHT, pros::E_MOTOR_GEARSET_18, true);
