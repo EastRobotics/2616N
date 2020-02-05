@@ -12,13 +12,16 @@ void joystickDataFixer(int &x, int &y) {
         r = (r - DEADZONE_RADIUS) * 128 / (128.0 - DEADZONE_RADIUS);
 
         double theta = (x < 0) * 180 + (180 / M_PI) * atan(y / (x * 1.0));
-        if (x == 0) {
+        if (x == 0) 
             theta = 90 + 180 * (y < 0);
-            return;
-        }
+        
 
         if (theta < 0)
             theta += 360;
+        
+        if(fabs(fabs(round(theta/90))-fabs(theta/90)) < ANGLE_TOLERANCE/90.0) {
+            theta = round(theta/90.0)*90;
+        }
 
         x = round(r * cos(M_PI / 180 * theta));
         y = round(r * sin(M_PI / 180 * theta));

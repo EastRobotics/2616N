@@ -2,9 +2,9 @@
 #include "motorTemps.hpp"
 #include "drive.hpp"
 
-// #define NEW_TRAY_RETURN
+#include <array>
 
-pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
+// pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
 pros::Task tempShower (showTemps, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "tempShower");
 
 /**
@@ -151,11 +151,12 @@ void lift()
     }
 }
 
+
 void tray(void * a)
 {
     while (true) {
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-            tray_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
+            tray_mtr.move_voltage(int(MAX_FORWARD*abs(cos(M_PI*tray_mtr.get_position()/15000))));
 
         #ifdef NEW_TRAY_RETURN
         } else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
@@ -188,6 +189,11 @@ void tray(void * a)
             }
             tray_mtr.move_voltage(0);
         #else
+
+
+
+
+
         } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > TRAY_STOP) {
             tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
         #endif
@@ -212,7 +218,6 @@ void intakes()
         left_intake_mtr.move_voltage(0);
     }
 }
-
 
 void opcontrol() {
 
@@ -246,6 +251,10 @@ void opcontrol() {
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN) && !pros::competition::is_connected())
             autonomous();
 
+        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT))
+            tray_mtr.tare_position();
+
         pros::delay(20);
+
 	}
 }

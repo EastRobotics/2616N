@@ -107,7 +107,7 @@ void showTemps(void * a) {
         pros::delay(50);
         controller.print(1, 0, "Cont Bat - %d%%", controller.get_battery_capacity());
         pros::delay(50);
-        controller.set_text(2, 0, "-_-_-_-_-_-_-_-");
+        controller.set_text(2, 0, "Go Faster");
         mutexControllerScreen.give();
         pros::delay(350);
     }
