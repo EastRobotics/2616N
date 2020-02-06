@@ -2,6 +2,8 @@
 #include "motorTemps.hpp"
 #include "drive.hpp"
 
+// #define NEW_TRAY_RETURN
+
 #include <array>
 
 // pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
@@ -94,7 +96,7 @@ void deploy()
     right_intake_mtr.move_voltage(MAX_BACKWARD);
     
     // Lift up, tray up until its out of the lift's way then stop
-    lift_mtr.move_voltage(5500);
+    lift_mtr.move_voltage(10000);
     for (int i = 0; i < 100 && tray_mtr.get_position() < 1300; i++) {
         tray_mtr.move_voltage(MAX_FORWARD);
         pros::delay(20);
@@ -156,7 +158,10 @@ void tray(void * a)
 {
     while (true) {
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-            tray_mtr.move_voltage(int(MAX_FORWARD*abs(cos(M_PI*tray_mtr.get_position()/15000))));
+            if (tray_mtr.get_position() >= TRAY_STOP)
+                tray_mtr.move_voltage(int(MAX_FORWARD*abs(cos(M_PI*tray_mtr.get_position()/15000)))/motorSlowdown);
+            else
+                tray_mtr.move_voltage(MAX_FORWARD);
 
         #ifdef NEW_TRAY_RETURN
         } else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
@@ -169,7 +174,7 @@ void tray(void * a)
             lift_mtr.move_voltage(0);
 
             // Quickly close to down
-            while (tray_mtr.get_position() > TRAY_STOP + 500) {
+            while (tray_mtr.get_position() > TRAY_STOP + 1200) {
                 tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
                 pros::delay(20);
             }
@@ -183,22 +188,19 @@ void tray(void * a)
             lift_mtr.move_voltage(0);
 
             // Slowly the rest of the way
-            while (tray_mtr.get_position() > TRAY_STOP) {
-                tray_mtr.move_voltage(-4000/motorSlowdown);
+            while (tray_mtr.get_position() > TRAY_STOP + 400) {
+                // tray_mtr.move_voltage(-4000/motorSlowdown);
                 pros::delay(20);
             }
             tray_mtr.move_voltage(0);
         #else
-
-
-
-
-
-        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > TRAY_STOP) {
+        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > TRAY_STOP + 75) {
+            tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
             tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
         #endif
 
         } else {
+            tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
             tray_mtr.move_voltage(0);
         }
         pros::delay(30);
