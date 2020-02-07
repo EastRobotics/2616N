@@ -41,7 +41,7 @@ void autonDriveLeftRight(int left, int right)
 void blueUnprotAuton()
 {
     deploy();
-    tareDrive;
+    tareDrive();
     lift_mtr.move_voltage(-2000);
 
     // Move forward to get the 5 cubes
@@ -49,7 +49,7 @@ void blueUnprotAuton()
     while(b_left_mtr.get_position() < 2900)
         autonStraightDrive(6000);
     autonDriveStop();
-    pros::delay(250);
+    pros::delay(500);
 
     autonIntakes(0);
     // Backwards towards the goal zone
@@ -61,12 +61,12 @@ void blueUnprotAuton()
 
     // Turn ~135 degrees left
     autonDriveLeftRight(-4000, 4000);
-    pros::delay(1250);
+    pros::delay(1200);
 
     // Forwards into the goal zone (Times out after 2 sec if it's stuck)
     int initPos = b_left_mtr.get_position();
-    for (int i = 0; i <= 100 && b_left_mtr.get_position() < initPos + 150; i++) {
-        autonStraightDrive(6000);
+    for (int i = 0; b_left_mtr.get_position() < initPos + 500; i++) {
+        autonStraightDrive(8000);
         pros::delay(20);
     }
     autonDriveStop();
@@ -82,13 +82,15 @@ void blueUnprotAuton()
     pros::delay(500);
 
     // Back out time
-    autonStraightDrive(-6000);
-    pros::delay(1000);
+    autonStraightDrive(-8000);
+    pros::delay(500);
     autonDriveStop();
     
     // Tray back down
-    for (int i = 0; i <= 150 && tray_mtr.get_position() > TRAY_STOP; i++)
-        tray_mtr.move_voltage(-6000);
+    for (int i = 0; i <= 150 && tray_mtr.get_position() > TRAY_STOP; i++) {
+        tray_mtr.move_voltage(-12000);
+        pros::delay(20);
+    }
     tray_mtr.move_voltage(0);
     lift_mtr.move_voltage(0);
 }
@@ -162,7 +164,8 @@ void onePointAuton()
 
 void autonomous()
 {
-    switch (autonSelection)
+    blueUnprotAuton();
+    switch (-1)
     {
         case (ONE_POINT):
             onePointAuton();
@@ -183,7 +186,8 @@ void deploy()
         right_intake_mtr.move_voltage(MAX_BACKWARD);
         
         // Lift up, tray up until its out of the lift's way then stop
-        lift_mtr.move_voltage(5500);
+        lift_mtr.move_voltage(12000);
+        pros::delay(50);
         for (int i = 0; i < 100 && tray_mtr.get_position() < 1300; i++) {
             tray_mtr.move_voltage(MAX_FORWARD);
             pros::delay(20);

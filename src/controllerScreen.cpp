@@ -95,6 +95,7 @@ void contScreenTask(void * a)
     int lastBattCapacity = (int)pros::battery::get_capacity();
     int lastContBatt = controller.get_battery_capacity();
     int lastAuton = autonSelection;
+    passiveScreen();
     while (true) {
         if ((int)pros::battery::get_capacity() != lastBattCapacity ||
              controller.get_battery_capacity() != lastContBatt ||
@@ -115,7 +116,7 @@ void passiveScreen()
     mutexControllerScreen.take(TIMEOUT_MAX);
     controller.print(0, 0, "Battery - %d%%", (int)pros::battery::get_capacity());
     pros::delay(50);
-    controller.print(1, 0, "Cont Bat - %d%%", controller.get_battery_capacity());
+    controller.print(1, 0, "Cont Bat - %d\%", controller.get_battery_capacity());
     pros::delay(50);
     controller.print(2, 0, "Auton: %s", autonCodes[autonSelection]);
     pros::delay(50);

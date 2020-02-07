@@ -19,7 +19,7 @@ typedef enum {
   INTAKE_LEFT= 7
 } motors;
 
-constexpr bool FLIPPY_THING_ON = false;
+constexpr bool FLIPPY_THING_ON = true;
 constexpr bool DEPLOY_ANTI_TIP_RELEASE = false;
 
 constexpr int MAX_FORWARD = 12000;
