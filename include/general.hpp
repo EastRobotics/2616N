@@ -1,6 +1,7 @@
 #pragma once
 #ifndef GENERAL_HPP
 #define GENERAL_HPP
+#include "main.h"
 
 void deploy(void);
 void lift(void);
@@ -18,7 +19,8 @@ typedef enum {
   INTAKE_LEFT= 7
 } motors;
 
-
+constexpr bool FLIPPY_THING_ON = false;
+constexpr bool DEPLOY_ANTI_TIP_RELEASE = false;
 
 constexpr int MAX_FORWARD = 12000;
 constexpr int MAX_BACKWARD = -12000;

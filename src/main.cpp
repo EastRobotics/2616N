@@ -23,6 +23,11 @@ void initialize()
     left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    
+    b_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    f_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    b_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    f_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 }
 
 /**
@@ -57,23 +62,9 @@ void competition_initialize() {
  * from where it left off.
  */
 
-void autonomous () {
-    deploy();
-    b_left_mtr.move_voltage(MAX_BACKWARD/2);
-    f_left_mtr.move_voltage(MAX_BACKWARD/2);
-    b_right_mtr.move_voltage(MAX_BACKWARD/2);
-    f_right_mtr.move_voltage(MAX_BACKWARD/2);
-    pros::delay(1800);
-    b_left_mtr.move_voltage(MAX_FORWARD/2);
-    f_left_mtr.move_voltage(MAX_FORWARD/2);
-    b_right_mtr.move_voltage(MAX_FORWARD/2);
-    f_right_mtr.move_voltage(MAX_FORWARD/2);
-    pros::delay(850);
-    b_left_mtr.move_voltage(0);
-    f_left_mtr.move_voltage(0);
-    b_right_mtr.move_voltage(0);
-    f_right_mtr.move_voltage(0);
-}
+
+
+
 
 
 /*
@@ -89,48 +80,6 @@ void autonomous () {
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-
-void deploy()
-{
-    left_intake_mtr.move_voltage(MAX_BACKWARD);
-    right_intake_mtr.move_voltage(MAX_BACKWARD);
-    
-    // Lift up, tray up until its out of the lift's way then stop
-    lift_mtr.move_voltage(10000);
-    for (int i = 0; i < 100 && tray_mtr.get_position() < 1300; i++) {
-        tray_mtr.move_voltage(MAX_FORWARD);
-        pros::delay(20);
-    }
-    tray_mtr.move_voltage(0);
-    pros::delay(100);
-
-    // Lift back down
-    for (int i = 0; i < 100 && lift_mtr.get_position() > 10; i++) {
-        lift_mtr.move_voltage(MAX_BACKWARD);
-        pros::delay(20);
-    }
-    lift_mtr.move_voltage(0);
-
-    // Tray back down
-    for (int i = 0; i < 100 && tray_mtr.get_position() > TRAY_STOP; i++) {
-        tray_mtr.move_voltage(MAX_BACKWARD);
-        pros::delay(20);
-    }
-    tray_mtr.move_voltage(0);
-
-    // Antitip release
-    f_right_mtr.move_voltage(8000);
-    b_right_mtr.move_voltage(8000);
-    f_left_mtr.move_voltage(8000);
-    b_left_mtr.move_voltage(8000);
-    pros::delay(200);
-    f_right_mtr.move_voltage(0);
-    b_right_mtr.move_voltage(0);
-    f_left_mtr.move_voltage(0);
-    b_left_mtr.move_voltage(0);
-    left_intake_mtr.move_voltage(0);
-    right_intake_mtr.move_voltage(0);
-}
 
 bool liftInUse = false;
 void lift()
