@@ -1,12 +1,15 @@
 #include "main.h"
 #include "controllerScreen.hpp"
 #include "drive.hpp"
+#include "auton.hpp"
 #include <array>
 
 // #define NEW_TRAY_RETURN
 
 // pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
-pros::Task tempShower (contScreenTask, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "tempShower");
+pros::Task contScreen (contScreenTask, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "contScreen");
+pros::Task autonSwitcher (autonSwitcherTask, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "autonSwitcher");
+
 
 void initialize()
 {

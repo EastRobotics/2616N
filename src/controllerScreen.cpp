@@ -94,7 +94,7 @@ void contScreenTask(void * a)
 {
     int lastBattCapacity = (int)pros::battery::get_capacity();
     int lastContBatt = controller.get_battery_capacity();
-    autonSelections lastAuton = autonSelection;
+    int lastAuton = autonSelection;
     while (true) {
         if ((int)pros::battery::get_capacity() != lastBattCapacity ||
              controller.get_battery_capacity() != lastContBatt ||

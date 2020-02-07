@@ -21,3 +21,4 @@ void deploy(void);
 void onePointAuton(void);
 void redUnprotAuton(void);
 void tareDrive(void);
+void autonSwitcherTask(void * a);
