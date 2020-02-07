@@ -1,14 +1,15 @@
 #pragma once
 
 #include "general.hpp"
+#include <array>
 
 typedef enum {
     ONE_POINT = 0,
-    RED_UNPROT,
-    BLUE_UNPROT
+    BLUE_UNPROT,
+    RED_UNPROT
 } autonSelections;
 
-autonSelections autonSelection = ONE_POINT;
+static autonSelections autonSelection = ONE_POINT;
 
 void autonDriveStop(void);
 void autonIntakes(int power);
