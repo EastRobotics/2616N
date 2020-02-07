@@ -9,7 +9,7 @@ typedef enum {
     RED_UNPROT
 } autonSelections;
 
-static autonSelections autonSelection = ONE_POINT;
+static int autonSelection = ONE_POINT;
 
 void autonDriveStop(void);
 void autonIntakes(int power);

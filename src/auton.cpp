@@ -260,3 +260,19 @@ void deploy()
         }
     }
 }
+
+void autonSwitcherTask(void * a)
+{
+    while (true) {
+        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)) {
+            if (!pros::competition::is_connected())
+                autonSelection = (autonSelection == 2) ? 0 : autonSelection + 1;
+            else {
+                pros::delay(500);
+                if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
+                    autonSelection = (autonSelection == 2) ? 0 : autonSelection + 1;
+            }
+        }
+        pros::delay(200);
+    }
+}
