@@ -1,4 +1,6 @@
 #include "auton.hpp"
+#include "tasks.hpp"
+#include <string>
 
 void tareDrive()
 {
@@ -98,7 +100,7 @@ void blueUnprotAuton()
 void redUnprotAuton()
 {
     deploy();
-    tareDrive;
+    tareDrive();
     lift_mtr.move_voltage(-2000);
 
     // Move forward to get the 5 cubes
@@ -106,7 +108,7 @@ void redUnprotAuton()
     while(b_left_mtr.get_position() < 2900)
         autonStraightDrive(6000);
     autonDriveStop();
-    pros::delay(250);
+    pros::delay(500);
 
     autonIntakes(0);
     // Backwards towards the goal zone
@@ -116,14 +118,14 @@ void redUnprotAuton()
     while (b_left_mtr.get_position() > 1000)
         autonStraightDrive(-4000);
 
-    // Turn ~135 degrees left
+    // Turn ~135 degrees right
     autonDriveLeftRight(4000, -4000);
-    pros::delay(1250);
+    pros::delay(1200);
 
     // Forwards into the goal zone (Times out after 2 sec if it's stuck)
     int initPos = b_left_mtr.get_position();
-    for (int i = 0; i <= 100 && b_left_mtr.get_position() < initPos + 150; i++) {
-        autonStraightDrive(6000);
+    for (int i = 0; b_left_mtr.get_position() < initPos + 500; i++) {
+        autonStraightDrive(8000);
         pros::delay(20);
     }
     autonDriveStop();
@@ -139,13 +141,15 @@ void redUnprotAuton()
     pros::delay(500);
 
     // Back out time
-    autonStraightDrive(-6000);
-    pros::delay(1000);
+    autonStraightDrive(-8000);
+    pros::delay(500);
     autonDriveStop();
     
     // Tray back down
-    for (int i = 0; i <= 150 && tray_mtr.get_position() > TRAY_STOP; i++)
-        tray_mtr.move_voltage(-6000);
+    for (int i = 0; i <= 150 && tray_mtr.get_position() > TRAY_STOP; i++) {
+        tray_mtr.move_voltage(-12000);
+        pros::delay(20);
+    }
     tray_mtr.move_voltage(0);
     lift_mtr.move_voltage(0);
 }
@@ -157,26 +161,14 @@ void onePointAuton()
     autonStraightDrive(MAX_BACKWARD/2);
     pros::delay(1800);
     // Slow forwards to make sure robot's not touching
-    autonStraightDrive(MAX_BACKWARD/2);
+    autonStraightDrive(MAX_FORWARD/2);
     pros::delay(850);
     autonDriveStop();
 }
 
 void autonomous()
 {
-    blueUnprotAuton();
-    switch (-1)
-    {
-        case (ONE_POINT):
-            onePointAuton();
-            break;
-        case (BLUE_UNPROT):
-            blueUnprotAuton();
-            break;
-        case (RED_UNPROT):
-            redUnprotAuton();
-            break;
-    }
+    autons[autonSelection].function();
 }
 
 void deploy()
@@ -186,12 +178,17 @@ void deploy()
         right_intake_mtr.move_voltage(MAX_BACKWARD);
         
         // Lift up, tray up until its out of the lift's way then stop
-        lift_mtr.move_voltage(12000);
-        pros::delay(50);
-        for (int i = 0; i < 100 && tray_mtr.get_position() < 1300; i++) {
+        // lift_mtr.move_voltage(8000);
+        // pros::delay(50);
+        for (int i = 0; i < 100 && tray_mtr.get_position() < 400; i++) {
             tray_mtr.move_voltage(MAX_FORWARD);
             pros::delay(20);
         }
+        for (int i = 0; i < 100 && tray_mtr.get_position() < 1300; i++) {
+            tray_mtr.move_voltage(MAX_FORWARD);
+            lift_mtr.move_voltage(8000); 
+        }
+        lift_mtr.move_voltage(0);
         tray_mtr.move_voltage(0);
         pros::delay(100);
 
@@ -267,16 +264,27 @@ void deploy()
 
 void autonSwitcherTask(void * a)
 {
+    int i = 0;
     while (true) {
-        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)) {
-            if (!pros::competition::is_connected())
-                autonSelection = (autonSelection == 2) ? 0 : autonSelection + 1;
-            else {
-                pros::delay(500);
-                if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
-                    autonSelection = (autonSelection == 2) ? 0 : autonSelection + 1;
-            }
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+            mutexControllerScreen.take(TIMEOUT_MAX);
+            controller.clear();
+            pros::delay(50);
+            controller.print(2, 0, "Auton: %s", autons[autonSelection].code);
+            pros::delay(50);
+            i++;
+            mutexControllerScreen.give();
+            // autonSelection = 0;
+            // if (!pros::competition::is_connected())
+            autonSelection = (autonSelection == autons.size() - 1) ? 0 : autonSelection + 1;
+            // else {
+            //     pros::delay(500);
+            //     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
+            //         autonSelection = (autonSelection == 2) ? 0 : autonSelection + 1;
+            
+            while (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {}
+            contScreen.notify();
         }
-        pros::delay(200);
+        pros::delay(250);
     }
 }

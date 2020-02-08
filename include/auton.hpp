@@ -1,15 +1,14 @@
 #pragma once
 
 #include "general.hpp"
-#include <array>
+#include <vector>
 
-typedef enum {
-    ONE_POINT = 0,
-    BLUE_UNPROT,
-    RED_UNPROT
-} autonSelections;
+typedef struct {
+    void (*function)(void);
+    std::string code;
+} auton_t;
 
-static int autonSelection = BLUE_UNPROT;
+static int autonSelection = 2;
 
 void autonDriveStop(void);
 void autonIntakes(int power);
@@ -22,3 +21,9 @@ void onePointAuton(void);
 void redUnprotAuton(void);
 void tareDrive(void);
 void autonSwitcherTask(void * a);
+
+static std::vector<auton_t> autons = {
+    {onePointAuton, "OnePoint"},
+    {blueUnprotAuton, "B-Unprot"},
+    {redUnprotAuton, "R-Unprot"}
+};

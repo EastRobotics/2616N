@@ -1,4 +1,5 @@
 #include "controllerScreen.hpp"
+#include "tasks.hpp"
 
 // NOTE: Not currently in use, it causes big big issues for some reason
 void overTempWarning()
@@ -97,28 +98,32 @@ void contScreenTask(void * a)
     int lastAuton = autonSelection;
     passiveScreen();
     while (true) {
-        if ((int)pros::battery::get_capacity() != lastBattCapacity ||
-             controller.get_battery_capacity() != lastContBatt ||
-             lastAuton != autonSelection) {
+
+        if (contScreen.notify_take(true, 100) ||
+            (int)pros::battery::get_capacity() != lastBattCapacity ||
+             controller.get_battery_capacity() != lastContBatt) {
             passiveScreen();
         }
         showTemps();
+        controller.clear();
 
         lastBattCapacity = (int)pros::battery::get_capacity();
         lastContBatt = controller.get_battery_capacity();
         lastAuton = autonSelection;
-        pros::delay(400);
+        pros::delay(150);
     }
 }
 
 void passiveScreen()
 {
     mutexControllerScreen.take(TIMEOUT_MAX);
+    controller.clear();
+    pros::delay(50);
     controller.print(0, 0, "Battery - %d%%", (int)pros::battery::get_capacity());
     pros::delay(50);
-    controller.print(1, 0, "Cont Bat - %d\%", controller.get_battery_capacity());
+    controller.print(1, 0, "Cont Bat - %d%%", controller.get_battery_capacity());
     pros::delay(50);
-    controller.print(2, 0, "Auton: %s", autonCodes[autonSelection]);
+    controller.print(2, 0, "Auton: %s", autons[autonSelection].code);
     pros::delay(50);
     mutexControllerScreen.give();
 }

@@ -20,9 +20,6 @@ const std::vector<motorCode> motorCodes =
             {&left_intake_mtr, "LI"}, {&right_intake_mtr, "RI"}
         };
 
-const std::array<std::string, 3> autonCodes = 
-        {"OnePoint", "B-Unprot", "R-Unprot"};
-
 void overTempWarning(void);
 void OTWarning_task(void * a);
 void showTemps(void);
