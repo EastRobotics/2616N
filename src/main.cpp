@@ -15,11 +15,6 @@ void initialize()
     left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-    
-    b_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-    f_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-    b_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-    f_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 }
 
 void disabled() {}
@@ -140,6 +135,10 @@ void intakes()
  */
 
 void opcontrol() {
+    b_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    f_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    b_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    f_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
     
     tray_mtr.move_voltage(3000);
     pros::delay(120);
