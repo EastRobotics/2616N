@@ -58,7 +58,7 @@ void tray(void * a)
     while (true) {
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
             if (tray_mtr.get_position() >= TRAY_STOP)
-                tray_mtr.move_voltage(int(MAX_FORWARD*abs(cos(M_PI*tray_mtr.get_position()/15000)))/motorSlowdown);
+                tray_mtr.move_voltage(int(MAX_FORWARD*abs(cos(M_PI*tray_mtr.get_position()/12000)))/motorSlowdown);
             else
                 tray_mtr.move_voltage(MAX_FORWARD);
 
