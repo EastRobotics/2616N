@@ -160,7 +160,7 @@ void opcontrol() {
 
         //Deployment
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
-            deploy();
+            deploy(true);
 
         //Vibration at certain test values
         if (tray_mtr.get_position() <= -50) {

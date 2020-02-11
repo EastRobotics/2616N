@@ -20,7 +20,6 @@ typedef enum {
 } motors;
 
 constexpr bool FLIPPY_THING_ON = true;
-constexpr bool DEPLOY_ANTI_TIP_RELEASE = false;
 
 constexpr int MAX_FORWARD = 12000;
 constexpr int MAX_BACKWARD = -12000;

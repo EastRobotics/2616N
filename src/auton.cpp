@@ -42,7 +42,7 @@ void autonDriveLeftRight(int left, int right)
 
 void blueUnprotAuton()
 {
-    deploy();
+    deploy(false);
     tareDrive();
     lift_mtr.move_voltage(-2000);
 
@@ -99,7 +99,7 @@ void blueUnprotAuton()
 
 void redUnprotAuton()
 {
-    deploy();
+    deploy(false);
     tareDrive();
     lift_mtr.move_voltage(-2000);
 
@@ -156,7 +156,7 @@ void redUnprotAuton()
 
 void onePointAuton()
 {
-    deploy();
+    deploy(true);
     // Slow backwards the get the cube in
     autonStraightDrive(MAX_BACKWARD/2);
     pros::delay(1800);
@@ -183,7 +183,7 @@ void autonomous()
 
 }
 
-void deploy()
+void deploy(bool deployAntiTips)
 {
     if (FLIPPY_THING_ON) {
         left_intake_mtr.move_voltage(MAX_BACKWARD);
@@ -218,7 +218,7 @@ void deploy()
         }
         tray_mtr.move_voltage(0);
 
-        if (DEPLOY_ANTI_TIP_RELEASE) {
+        if (deployAntiTips) {
             f_right_mtr.move_voltage(8000);
             b_right_mtr.move_voltage(8000);
             f_left_mtr.move_voltage(8000);
@@ -258,7 +258,7 @@ void deploy()
         }
         tray_mtr.move_voltage(0);
 
-        if (DEPLOY_ANTI_TIP_RELEASE) {
+        if (deployAntiTips) {
             f_right_mtr.move_voltage(8000);
             b_right_mtr.move_voltage(8000);
             f_left_mtr.move_voltage(8000);
