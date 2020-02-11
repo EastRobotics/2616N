@@ -8,7 +8,7 @@ typedef struct {
     std::string code;
 } auton_t;
 
-static int autonSelection = 0;
+static int autonSelection = 1;
 
 void autonDriveStop(void);
 void autonIntakes(int power);
