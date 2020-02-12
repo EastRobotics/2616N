@@ -9,8 +9,7 @@
 class betterController : public pros::Controller {
     private:
         typedef std::tuple<int, int, const char*> contPrintFmt;
-        void controllerPrintTask(void * a);
-
+        std::queue<contPrintFmt> contQueue;
     public:
         betterController (pros::controller_id_e_t id) : pros::Controller::Controller(id) {}
 
@@ -21,7 +20,8 @@ class betterController : public pros::Controller {
         void rumble(const char* rumble_pattern);
         void clear(void);
         void clear_line(std::uint8_t line);
-        std::queue<contPrintFmt> contQueue;
+
+        void printTask(void* a);
 };
 
 extern betterController controller;

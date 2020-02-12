@@ -30,15 +30,14 @@ void betterController::clear_line(std::uint8_t line)
     contQueue.push(std::make_tuple(line, 0, "               "));
 }
 
-void controllerPrintTask(void* a)
+void betterController::printTask(void* a)
 {
-        betterController cont (pros::E_CONTROLLER_MASTER);
         std::tuple<int, int, const char*>  args;
         while (true) {
-            if (!cont.contQueue.empty()) {
-                args = cont.contQueue.front();
-                cont.contQueue.pop();
-                cont.set_text(std::get<0>(args), std::get<1>(args), std::get<2>(args));
+            if (!contQueue.empty()) {
+                args = contQueue.front();
+                contQueue.pop();
+                set_text(std::get<0>(args), std::get<1>(args), std::get<2>(args));
             }
             pros::delay(50);
         }
