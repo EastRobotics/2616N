@@ -1,14 +1,9 @@
+#ifndef BETTERCONTROLLER_CPP
+#define BETTER_CONTROLLER_CPP
 #include "betterController.hpp"
-#include "general.hpp"
+// #include "general.hpp"
 
-// betterController::betterController(pros::controller_id_e_t id) : pros::Controller::Controller(id) {}
-
-template <typename... Params>
-void betterController::print(std::uint8_t line, std::uint8_t col, const char* fmt, Params... args) {
-    char * str;
-    sprintf(str, fmt, args...);
-    contQueue.push(std::make_tuple(line, col, str));
-}
+betterController::betterController(pros::controller_id_e_t id) : pros::Controller::Controller(id) {}
 
 void betterController::set_text(std::uint8_t line, std::uint8_t col, const char* str)
 {
@@ -43,3 +38,4 @@ void bContPrintTask(void* a)
         pros::delay(50);
     }
 }
+#endif
