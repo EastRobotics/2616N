@@ -38,7 +38,7 @@
 #include "math.h"
 #include "pros/motors.hpp"
 #include "pros/apix.h"
-
+#include "betterController.hpp"
 #include "general.hpp"
 
 /**
