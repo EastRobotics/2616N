@@ -1,6 +1,9 @@
 #include "main.h"
-#include "motorTemps.hpp"
+#include "controllerScreen.hpp"
 #include "drive.hpp"
+#include "auton.hpp"
+#include "tasks.hpp"
+#include <array>
 
 // #define NEW_TRAY_RETURN
 
@@ -16,11 +19,6 @@ void initialize()
     tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 }
 
-/**
- * Runs while the robot is in the disabled state of Field Management System or
- * the VEX Competition Switch, following either autonomous or opcontrol. When
- * the robot is enabled, this task will exit.
- */
 void disabled() {}
 
 /**
@@ -33,94 +31,6 @@ void disabled() {}
  * starts.
  */
 void competition_initialize() {
-}
-
-
-/**
- * Runs the user autonomous code. This function will be started in its own task
- * with the default priority and stack size whenever the robot is enabled via
- * the Field Management System or the VEX Competition Switch in the autonomous
- * mode. Alternatively, this function may be called in initialize or opcontrol
- * for non-competition testing purposes.
- *
- * If the robot is disabled or communications is lost, the autonomous task
- * will be stopped. Re-enabling the robot will restart the task, not re-start it
- * from where it left off.
- */
-
-void autonomous () {
-    deploy();
-    b_left_mtr.move_voltage(MAX_BACKWARD/2);
-    f_left_mtr.move_voltage(MAX_BACKWARD/2);
-    b_right_mtr.move_voltage(MAX_BACKWARD/2);
-    f_right_mtr.move_voltage(MAX_BACKWARD/2);
-    pros::delay(1800);
-    b_left_mtr.move_voltage(MAX_FORWARD/2);
-    f_left_mtr.move_voltage(MAX_FORWARD/2);
-    b_right_mtr.move_voltage(MAX_FORWARD/2);
-    f_right_mtr.move_voltage(MAX_FORWARD/2);
-    pros::delay(850);
-    b_left_mtr.move_voltage(0);
-    f_left_mtr.move_voltage(0);
-    b_right_mtr.move_voltage(0);
-    f_right_mtr.move_voltage(0);
-}
-
-
-/*
- * Runs the operator control code. This function will be started in its own task
- * with the default priority and stack size whenever the robot is enabled via
- * the Field Management System or the VEX Competition Switch in the operator
- * control mode.
- *
- * If no competition control is connected, this function will run immediately
- * following initialize().
- *
- * If the robot is disabled or communications is lost, the
- * operator control task will be stopped. Re-enabling the robot will restart the
- * task, not resume it from where it left off.
- */
-
-void deploy()
-{
-    left_intake_mtr.move_voltage(MAX_BACKWARD);
-    right_intake_mtr.move_voltage(MAX_BACKWARD);
-    
-    // Lift up, tray up until its out of the lift's way then stop
-    lift_mtr.move_voltage(5500);
-    for (int i = 0; i < 100 && tray_mtr.get_position() < 1300; i++) {
-        tray_mtr.move_voltage(MAX_FORWARD);
-        pros::delay(20);
-    }
-    tray_mtr.move_voltage(0);
-    pros::delay(100);
-
-    // Lift back down
-    for (int i = 0; i < 100 && lift_mtr.get_position() > 10; i++) {
-        lift_mtr.move_voltage(MAX_BACKWARD);
-        pros::delay(20);
-    }
-    lift_mtr.move_voltage(0);
-
-    // Tray back down
-    for (int i = 0; i < 100 && tray_mtr.get_position() > TRAY_STOP; i++) {
-        tray_mtr.move_voltage(MAX_BACKWARD);
-        pros::delay(20);
-    }
-    tray_mtr.move_voltage(0);
-
-    // Antitip release
-    f_right_mtr.move_voltage(8000);
-    b_right_mtr.move_voltage(8000);
-    f_left_mtr.move_voltage(8000);
-    b_left_mtr.move_voltage(8000);
-    pros::delay(200);
-    f_right_mtr.move_voltage(0);
-    b_right_mtr.move_voltage(0);
-    f_left_mtr.move_voltage(0);
-    b_left_mtr.move_voltage(0);
-    left_intake_mtr.move_voltage(0);
-    right_intake_mtr.move_voltage(0);
 }
 
 bool liftInUse = false;
@@ -144,11 +54,15 @@ void lift()
     }
 }
 
+
 void tray(void * a)
 {
     while (true) {
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-            tray_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
+            if (tray_mtr.get_position() >= TRAY_STOP)
+                tray_mtr.move_voltage(int(MAX_FORWARD*abs(cos(M_PI*tray_mtr.get_position()/12000)))/motorSlowdown);
+            else
+                tray_mtr.move_voltage(MAX_FORWARD);
 
         #ifdef NEW_TRAY_RETURN
         } else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
@@ -161,7 +75,7 @@ void tray(void * a)
             lift_mtr.move_voltage(0);
 
             // Quickly close to down
-            while (tray_mtr.get_position() > TRAY_STOP + 500) {
+            while (tray_mtr.get_position() > TRAY_STOP + 1200) {
                 tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
                 pros::delay(20);
             }
@@ -175,17 +89,19 @@ void tray(void * a)
             lift_mtr.move_voltage(0);
 
             // Slowly the rest of the way
-            while (tray_mtr.get_position() > TRAY_STOP) {
-                tray_mtr.move_voltage(-4000/motorSlowdown);
+            while (tray_mtr.get_position() > TRAY_STOP + 400) {
+                // tray_mtr.move_voltage(-4000/motorSlowdown);
                 pros::delay(20);
             }
             tray_mtr.move_voltage(0);
         #else
-        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > TRAY_STOP) {
+        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > TRAY_STOP + 75) {
+            tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
             tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
         #endif
 
         } else {
+            tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
             tray_mtr.move_voltage(0);
         }
         pros::delay(30);
@@ -206,9 +122,26 @@ void intakes()
     }
 }
 
+/*
+ * Runs the operator control code. This function will be started in its own task
+ * with the default priority and stack size whenever the robot is enabled via
+ * the Field Management System or the VEX Competition Switch in the operator
+ * control mode.
+ *
+ * If no competition control is connected, this function will run immediately
+ * following initialize().
+ *
+ * If the robot is disabled or communications is lost, the
+ * operator control task will be stopped. Re-enabling the robot will restart the
+ * task, not resume it from where it left off.
+ */
 
 void opcontrol() {
-
+    b_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    f_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    b_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    f_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    
     tray_mtr.move_voltage(3000);
     pros::delay(120);
     tray_mtr.move_voltage(0);
@@ -229,7 +162,7 @@ void opcontrol() {
 
         //Deployment
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
-            deploy();
+            deploy(true);
 
         //Vibration at certain test values
         if (tray_mtr.get_position() <= -50) {
@@ -239,6 +172,10 @@ void opcontrol() {
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN) && !pros::competition::is_connected())
             autonomous();
 
+        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT))
+            tray_mtr.tare_position();
+
         pros::delay(20);
+
 	}
 }

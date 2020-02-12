@@ -19,15 +19,14 @@ typedef enum {
   INTAKE_LEFT= 7
 } motors;
 
+constexpr bool FLIPPY_THING_ON = true;
 
-constexpr int DEADZONE_RADIUS = 25; // Circle about the origin
-constexpr int ANGLE_TOLERANCE = 5;  // Surrounding the axes +/-
 constexpr int MAX_FORWARD = 12000;
 constexpr int MAX_BACKWARD = -12000;
 constexpr int TRAY_STOP = 100;
 
 #ifndef M_PI
-constexpr double M_PI = 3.14159265358979323846;
+constexpr double M_PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679;
 #endif
 
 static int motorSlowdown = 1;
