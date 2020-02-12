@@ -1,6 +1,12 @@
 #pragma once
+<<<<<<< Updated upstream
 #ifndef GENERAL_HPP
 #define GENERAL_HPP
+=======
+// #ifndef GENERAL_HPP
+// #define GENERAL_HPP
+#include "main.h"
+>>>>>>> Stashed changes
 #include "betterController.hpp"
 
 void deploy(void);
@@ -32,7 +38,29 @@ constexpr double M_PI = 3.14159265358979323846;
 
 static int motorSlowdown = 1;
 
-static betterController controller(pros::E_CONTROLLER_MASTER);
+#include "main.h"
+#include <queue>
+#include <tuple>
+
+class betterController : public pros::Controller {
+    private:
+        typedef std::tuple<int, int, const char*> contPrintFmt;
+        void controllerPrintTask(void * a);
+
+    public:
+        betterController (pros::controller_id_e_t id) : pros::Controller::Controller(id) {}
+
+        template <typename... Params>
+        void print(std::uint8_t line, std::uint8_t col, const char* fmt, Params... args);
+
+        void set_text(std::uint8_t line, std::uint8_t col, const char* str);
+        void rumble(const char* rumble_pattern);
+        void clear(void);
+        void clear_line(std::uint8_t line);
+        std::queue<contPrintFmt> contQueue;
+};
+
+extern betterController controller;
 
 static pros::Motor f_right_mtr(DRIVE_FRONT_RIGHT, pros::E_MOTOR_GEARSET_18, true);
 static pros::Motor b_right_mtr(DRIVE_BACK_RIGHT, pros::E_MOTOR_GEARSET_18, true);
@@ -45,4 +73,4 @@ static pros::Motor lift_mtr(LIFT_ADJUSTOR, pros::E_MOTOR_GEARSET_36, true);
 static pros::Motor right_intake_mtr(INTAKE_RIGHT, pros::E_MOTOR_GEARSET_18, true);
 static pros::Motor left_intake_mtr(INTAKE_LEFT, pros::E_MOTOR_GEARSET_18, false);
 
-#endif
+// #endif

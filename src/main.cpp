@@ -4,16 +4,8 @@
 
 // #define NEW_TRAY_RETURN
 
-pros::Task OTWarning (OTWarning_task, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "OTWarning");
-pros::Task tempShower (showTemps, (void *)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "tempShower");
-pros::Task controllerPrint (controller.controllerPrintTask, (void*)"", TASK_PRIORITY_DEFAULT - 2, TASK_STACK_DEPTH_DEFAULT, "ContPrinter");
+betterController controller(pros::E_CONTROLLER_MASTER);
 
-/**
- * Runs initialization code. This occurs as soon as the program is started.
- *
- * All other competition modes are blocked by initialize; it is recommended
- * to keep execution time for this mode under a few seconds.
- */
 void initialize()
 {
     pros::lcd::initialize();
