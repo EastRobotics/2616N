@@ -17,7 +17,6 @@ void overTempWarning()
             overTemp = true;
         }
     }
-
     overTempStatic = overTemp;
 
     mutexControllerScreen.take(TIMEOUT_MAX);
@@ -89,6 +88,7 @@ void showTemps()
     controller.clear();
     pros::delay(50);
     mutexControllerScreen.give();
+    passiveScreen()
 }
 
 void contScreenTask(void * a)
@@ -101,7 +101,7 @@ void contScreenTask(void * a)
 
         if (contScreen.notify_take(true, 100) ||
             (int)pros::battery::get_capacity() != lastBattCapacity ||
-             controller.get_battery_capacity() != lastContBatt) {
+            controller.get_battery_capacity() != lastContBatt) {
             passiveScreen();
         }
         showTemps();
@@ -117,6 +117,7 @@ void contScreenTask(void * a)
 void passiveScreen()
 {
     mutexControllerScreen.take(TIMEOUT_MAX);
+    pros::delay(50);
     controller.clear();
     pros::delay(50);
     controller.print(0, 0, "Battery - %d%%", (int)pros::battery::get_capacity());

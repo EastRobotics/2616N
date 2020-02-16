@@ -17,6 +17,7 @@ void initialize()
     left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    
 }
 
 void disabled() {}
@@ -37,19 +38,16 @@ bool liftInUse = false;
 void lift()
 {
     if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-        liftInUse = true;
         lift_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
         if (tray_mtr.get_position() < 1300) {
             tray_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
         }
     } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-        liftInUse = true;
         if(lift_mtr.get_position() < 1300 && tray_mtr.get_position() > TRAY_STOP) {
             tray_mtr.move_voltage(-8000/motorSlowdown);
         }
         lift_mtr.move_voltage(MAX_BACKWARD);
     } else {
-        liftInUse = false;
         lift_mtr.move_voltage(0);
     }
 }
