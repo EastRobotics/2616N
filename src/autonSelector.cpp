@@ -1,5 +1,5 @@
-#include "general.hpp"
-#include "auton.hpp"
+#include "autonSelector.hpp"
+
 
 lv_obj_t* screen = lv_cont_create(lv_scr_act(), NULL);
 lv_obj_t* label = lv_label_create(lv_scr_act(), NULL);
