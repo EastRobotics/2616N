@@ -3,17 +3,19 @@
 #include "drive.hpp"
 #include "auton.hpp"
 #include "tasks.hpp"
+#include "autonSelector.hpp"
 #include <array>
 
 // #define NEW_TRAY_RETURN
 
 void initialize()
 {
-    pros::lcd::initialize();
+    // pros::lcd::initialize();
+    autonSelectorInit();
 
     right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-    lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 }
 
