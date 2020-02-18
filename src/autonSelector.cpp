@@ -1,4 +1,5 @@
 #include "autonSelector.hpp"
+#include "controllerScreen.hpp"
 
 
 lv_obj_t* screen = lv_cont_create(lv_scr_act(), NULL);
@@ -30,6 +31,7 @@ lv_res_t buttonPressed(lv_obj_t * obj)
 {
     autonSelection = autonSelection == autons.size() - 1 ? 0 : autonSelection + 1;
     autonSelectorReset();
+    passiveScreen();
     return LV_RES_OK;
 }
 
