@@ -4,6 +4,24 @@
 #include <iostream>
 #include "string"
 
+typedef enum {
+    BLEFT_MTR_INDEX = 0,
+    FLEFT_MTR_INDEX,
+    BRIGHT_MTR_INDEX,
+    BLEFT_MTR_INDEX,
+    LIFT_MTR_INDEX,
+    TRAY_MTR_INDEX,
+    L_INTAKE_MTR_INDEX,
+    R_INTAKE_MTR_INDEX
+} allMotorIndexEnum;
+
+typedef struct {
+    int sign;
+    int voltage;
+} rerunVoltageFmt;
+
+typedef std::vector<int> allMotorVoltageFmt;
+
 void recordRerun()
 {
     if (pros::usd::is_installed()) {
@@ -39,6 +57,33 @@ void replayRerun()
 {
     if (pros::usd::is_installed()) {
         std::ifstream motorData ("/usd/motorData.txt", std::ios::in);
-        
+        if (motorData.is_open()) {
+            std::vector<allMotorVoltageFmt> allMotorVoltages;
+            std::string motorDataString;
+            motorData >> motorDataString;
+            for (int i = 0; i < motorData.gcount(); i += 56) {
+                std::string currentLine = motorDataString.substr(i, 56);
+                std::vector<rerunVoltageFmt> currentLineVoltages;
+                allMotorVoltageFmt allLineMotorVoltages;
+                for (int j = 0; j < 34; j += 7) {
+                    std::string vltStr = currentLine.substr(j, 6);
+                    rerunVoltageFmt vlt;
+                    vlt.sign = vltStr[0] == '+' ? 1 : -1;
+                    vlt.voltage = std::stoi(vltStr.substr(1, 5));
+                    currentLineVoltages.insert(currentLineVoltages.end(), vlt);
+                }
+                for (auto& i: currentLineVoltages) {
+                    allLineMotorVoltages.insert(allLineMotorVoltages.end(), i.sign * i.voltage);
+                }
+                allMotorVoltages.insert(allMotorVoltages.end(), allLineMotorVoltages);
+            }
+            motorData.close();
+            for (auto& line: allMotorVoltages) {
+                for (int i = 0; i < line.size(); i++) {
+                    motorCodes[i].motor->move_voltage(line[i]);
+                }
+                pros::delay(20);
+            }
+        }
     }
 }
