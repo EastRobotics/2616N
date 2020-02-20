@@ -4,24 +4,6 @@
 #include <iostream>
 #include "string"
 
-typedef enum {
-    BLEFT_MTR_INDEX = 0,
-    FLEFT_MTR_INDEX,
-    BRIGHT_MTR_INDEX,
-    BLEFT_MTR_INDEX,
-    LIFT_MTR_INDEX,
-    TRAY_MTR_INDEX,
-    L_INTAKE_MTR_INDEX,
-    R_INTAKE_MTR_INDEX
-} allMotorIndexEnum;
-
-typedef struct {
-    int sign;
-    int voltage;
-} rerunVoltageFmt;
-
-typedef std::vector<int> allMotorVoltageFmt;
-
 void recordRerun()
 {
     if (pros::usd::is_installed()) {
@@ -30,19 +12,13 @@ void recordRerun()
                 std::ofstream motorData ("/usd/motorData.txt", std::ios::out | std::ios::trunc);
                 if (motorData.is_open()) {
                     while (!controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
-                        std::vector<std::string> voltages;
                         for (auto& i: motorCodes) {
-                            std::string buffer;
-                            buffer = "00000" + std::to_string(abs(i.motor->get_voltage()));
-                            buffer = buffer.substr(buffer.size() - 5, 5);
-                            buffer.insert(buffer.begin(), (i.motor->get_voltage() > 0 ? '+' : '-'));
-                            voltages.insert(voltages.end(), buffer);
+                            char buffer[7];
+                            // Format: ±XXXXX, ie. 732 -> +00732, -3321 -> -03321
+                            sprintf(buffer, "%+06d", i.motor->get_voltage());
+                            motorData << buffer << ' ';
                         }
-                        std::string buffer;
-                        for (auto& i: voltages)
-                            buffer.append(i + ' ');
-
-                        motorData << buffer << std::endl;
+                        motorData << std::endl;
                         pros::delay(20);
                     }
                     motorData.close();
@@ -54,35 +30,32 @@ void recordRerun()
 }
 
 void replayRerun()
-{
+{   
+    constexpr int ONE_LINE_LENGTH = 56;
+    constexpr int ONE_VOLTAGE_LENGTH = 7;
+    constexpr int ONE_NUM_LENGTH = 5;
     if (pros::usd::is_installed()) {
         std::ifstream motorData ("/usd/motorData.txt", std::ios::in);
         if (motorData.is_open()) {
-            std::vector<allMotorVoltageFmt> allMotorVoltages;
-            std::string motorDataString;
-            motorData >> motorDataString;
-            for (int i = 0; i < motorData.gcount(); i += 56) {
-                std::string currentLine = motorDataString.substr(i, 56);
-                std::vector<rerunVoltageFmt> currentLineVoltages;
-                allMotorVoltageFmt allLineMotorVoltages;
-                for (int j = 0; j < 34; j += 7) {
-                    std::string vltStr = currentLine.substr(j, 6);
-                    rerunVoltageFmt vlt;
-                    vlt.sign = vltStr[0] == '+' ? 1 : -1;
-                    vlt.voltage = std::stoi(vltStr.substr(1, 5));
-                    currentLineVoltages.insert(currentLineVoltages.end(), vlt);
-                }
-                for (auto& i: currentLineVoltages) {
-                    allLineMotorVoltages.insert(allLineMotorVoltages.end(), i.sign * i.voltage);
-                }
-                allMotorVoltages.insert(allMotorVoltages.end(), allLineMotorVoltages);
-            }
+            // Finding the length of the file in chars
+            motorData.seekg(0, motorData.end);
+            int fileLength = motorData.tellg();
+            motorData.seekg(0, motorData.beg);
+
+            // Dumping the file into a string
+            // Complicated bc operator<< doesn't work w/ std::string for some reason
+            char* motorDataCStr = new char [fileLength + 1];
+            motorData.read(motorDataCStr, fileLength);
+            std::string motorDataString (motorDataCStr);
             motorData.close();
-            for (auto& line: allMotorVoltages) {
-                for (int i = 0; i < line.size(); i++) {
-                    motorCodes[i].motor->move_voltage(line[i]);
+            delete[] motorDataCStr;
+
+            for(int i = 0; i < motorDataString.length(); i += ONE_LINE_LENGTH) {
+                std::string currentLine = motorDataString.substr(i, ONE_LINE_LENGTH);
+                for (int j = 0; j < ONE_LINE_LENGTH; j += ONE_VOLTAGE_LENGTH) {
+                    motorCodes[j].motor->move_voltage(std::stoi(currentLine.substr(j+1, ONE_NUM_LENGTH)));
                 }
-                pros::delay(20);
+            pros::delay(20);
             }
         }
     }
