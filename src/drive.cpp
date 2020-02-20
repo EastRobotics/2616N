@@ -29,6 +29,8 @@ void joystickDataFixer(int &x, int &y) {
 
 void drive()
 {
+    motorSlowdown = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A) ? 2 : 1;
+
     int y = 0;
     int x = 0;
     int left = 0;
