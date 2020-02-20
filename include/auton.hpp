@@ -12,7 +12,6 @@ static int autonSelection = 1;
 
 void autonDriveStop(void);
 void autonIntakes(int power);
-void autonomous(void);
 void autonStraightDrive(int power);
 void autonDriveLeftRight(int left, int right);
 void blueUnprotAuton(void);

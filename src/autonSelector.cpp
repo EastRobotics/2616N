@@ -7,6 +7,22 @@ lv_obj_t* label = lv_label_create(lv_scr_act(), NULL);
 lv_obj_t* button = lv_btn_create(lv_scr_act(), NULL);
 lv_obj_t* buttonLabel = lv_label_create(button, NULL);
 
+void autonomous()
+{
+    b_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    f_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    b_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    f_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+
+    autons[autonSelection].function();
+
+    
+    b_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    f_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    b_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    f_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+}
+
 void autonSelectorInit()
 {
     lv_obj_set_size(screen, 476, 272);
