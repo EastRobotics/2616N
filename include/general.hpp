@@ -31,6 +31,8 @@ constexpr double M_PI = 3.141592653589793238462643383279502884197169399375105820
 
 static int motorSlowdown = 1;
 
+static pros::ADIDigitalIn autonSelectorButton (8);
+
 static pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 static pros::Motor f_right_mtr(DRIVE_FRONT_RIGHT, pros::E_MOTOR_GEARSET_18, true);

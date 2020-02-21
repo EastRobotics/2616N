@@ -155,25 +155,44 @@ void opcontrol() {
         
         motorSlowdown = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A) ? 2 : 1;
 
-        std::string str = std::to_string(lift_mtr.get_position());
-        pros::lcd::set_text(2, "Lift motor: "+ str);
-        str = std::to_string(tray_mtr.get_position());
-        pros::lcd::set_text(3, "Tray motor: "+str);
+        // std::string str = std::to_string(lift_mtr.get_position());
+        // pros::lcd::set_text(2, "Lift motor: "+ str);
+        // str = std::to_string(tray_mtr.get_position());
+        // pros::lcd::set_text(3, "Tray motor: "+str);
+
+        std::cout << (lift_mtr.get_position()) << "\n";
+
 
         //Deployment
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
             deploy(true);
 
         //Vibration at certain test values
-        if (tray_mtr.get_position() <= -50) {
+        if ( (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)  || controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) && tray_mtr.get_position() <= 50) {
             controller.rumble("-");
         }
+
+        if (tray_mtr.get_position() > 8000) {
+            right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+            left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        } else {
+            if (left_intake_mtr.get_brake_mode() == pros::E_MOTOR_BRAKE_COAST) {
+                right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+                left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+            }
+        }
+
+        // if (lift_mtr.get_position() >= 2700 && controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+            // controller.rumble("-");
+        // }
 
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN) && !pros::competition::is_connected())
             autonomous();
 
-        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT))
+        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT) && !pros::competition::is_connected())
             tray_mtr.tare_position();
+
+        
 
         pros::delay(20);
 

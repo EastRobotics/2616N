@@ -55,3 +55,13 @@ void autonSelectorReset()
 {
     lv_label_set_text(label, autons[autonSelection].code.c_str());
 }
+
+void autonSelectorButtonTask(void* a)
+{
+    while (true) {
+        if (autonSelectorButton.get_new_press()) {
+            buttonPressed(nullptr);
+        }
+        pros::delay(500);
+    }
+}
