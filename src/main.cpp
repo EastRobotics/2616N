@@ -60,10 +60,10 @@ void tray(void * a)
     while (true) {
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
             if (tray_mtr.get_position() >= TRAY_STOP)
-                tray_mtr.move_voltage(int(MAX_FORWARD*abs(cos(M_PI*tray_mtr.get_position()/12000)))/motorSlowdown);
+                tray_mtr.move_voltage(1000+int((MAX_FORWARD-1000)*abs(cos(M_PI*tray_mtr.get_position()/12000)))/motorSlowdown);
             else
                 tray_mtr.move_voltage(MAX_FORWARD);
-
+        // std::cout <<tray_mtr.get_position() << std::endl;
         #ifdef NEW_TRAY_RETURN
         } else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
             
@@ -160,7 +160,7 @@ void opcontrol() {
         // str = std::to_string(tray_mtr.get_position());
         // pros::lcd::set_text(3, "Tray motor: "+str);
 
-        std::cout << (lift_mtr.get_position()) << "\n";
+        // std::cout << (lift_mtr.get_position()) << "\n";
 
 
         //Deployment
@@ -192,7 +192,15 @@ void opcontrol() {
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT) && !pros::competition::is_connected())
             tray_mtr.tare_position();
 
-        
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
+            right_intake_mtr.move_voltage(-6000);
+            left_intake_mtr.move_voltage(-6000);
+            b_left_mtr.move_voltage(-6000);
+            b_right_mtr.move_voltage(-6000);
+            f_left_mtr.move_voltage(-6000);
+            f_right_mtr.move_voltage(-6000);
+        }
+             
 
         pros::delay(20);
 

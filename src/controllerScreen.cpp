@@ -68,7 +68,7 @@ void showTemps()
     int count = 0;
     bool released = false;
     mutexControllerScreen.take(TIMEOUT_MAX);
-    while (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
+    while (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
         count++;
         if (count % 4 <= 1) {
             controller.print(0, 0, "BL - %d FL - %d", 
