@@ -15,7 +15,7 @@ void initialize()
 
     right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-    lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    lift_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 }
 

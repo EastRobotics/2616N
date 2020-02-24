@@ -62,6 +62,6 @@ void autonSelectorButtonTask(void* a)
         if (autonSelectorButton.get_new_press()) {
             buttonPressed(nullptr);
         }
-        pros::delay(200);
+        pros::delay(75);
     }
 }

@@ -43,13 +43,14 @@ void autonDriveLeftRight(int left, int right)
 void blueUnprotAuton()
 {
     deploy(false);
+    pros::delay(1000);
     tareDrive();
-    lift_mtr.move_voltage(-2000);
+    lift_mtr.move_voltage(-4000);
 
     // Move forward to get the 5 cubes
     autonIntakes(MAX_FORWARD);
     while(b_left_mtr.get_position() < 2900)
-        autonStraightDrive(6000);
+        autonStraightDrive(4000);
     autonDriveStop();
     pros::delay(500);
 
@@ -100,13 +101,14 @@ void blueUnprotAuton()
 void redUnprotAuton()
 {
     deploy(false);
+    pros::delay(1000);
     tareDrive();
-    lift_mtr.move_voltage(-2000);
+    lift_mtr.move_voltage(-4000);
 
     // Move forward to get the 5 cubes
     autonIntakes(MAX_FORWARD);
     while(b_left_mtr.get_position() < 2900)
-        autonStraightDrive(6000);
+        autonStraightDrive(4000);
     autonDriveStop();
     pros::delay(500);
 
