@@ -121,7 +121,7 @@ void intakes()
         right_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
         left_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
     } else {
-        if (tray_mtr.get_position() < 3500) {
+        if (tray_mtr.get_position() < 3500 && !controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
             right_intake_mtr.move_voltage(0);
             left_intake_mtr.move_voltage(0);
         }
