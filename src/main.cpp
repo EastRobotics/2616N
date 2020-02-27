@@ -59,8 +59,12 @@ void tray(void * a)
 {
     while (true) {
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-            if (tray_mtr.get_position() >= TRAY_STOP)
+            if (tray_mtr.get_position() >= TRAY_STOP) {
                 tray_mtr.move_voltage(1000+int((MAX_FORWARD-1000)*abs(cos(M_PI*tray_mtr.get_position()/12000)))/motorSlowdown);
+                if (tray_mtr.get_position() >= 3500) {
+                    autonIntakes(-3000);
+                }
+            }
             else
                 tray_mtr.move_voltage(MAX_FORWARD);
         // std::cout <<tray_mtr.get_position() << std::endl;
@@ -112,13 +116,15 @@ void intakes()
 {
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
         right_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
-        left_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);   
+        left_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
     } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
         right_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
         left_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
     } else {
-        right_intake_mtr.move_voltage(0);
-        left_intake_mtr.move_voltage(0);
+        if (tray_mtr.get_position() < 3500) {
+            right_intake_mtr.move_voltage(0);
+            left_intake_mtr.move_voltage(0);
+        }
     }
 }
 
@@ -165,14 +171,14 @@ void opcontrol() {
 
         //Deployment
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
-            deploy(true);
+            deploy(DEPLOY_ANTI_TIPS);
 
         //Vibration at certain test values
         if ( (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)  || controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) && tray_mtr.get_position() <= 50) {
             controller.rumble("-");
         }
 
-        if (tray_mtr.get_position() > 8000) {
+        if (tray_mtr.get_position() > 3500) {
             right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
             left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         } else {
@@ -193,12 +199,8 @@ void opcontrol() {
             tray_mtr.tare_position();
 
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
-            right_intake_mtr.move_voltage(-6000);
-            left_intake_mtr.move_voltage(-6000);
-            b_left_mtr.move_voltage(-6000);
-            b_right_mtr.move_voltage(-6000);
-            f_left_mtr.move_voltage(-6000);
-            f_right_mtr.move_voltage(-6000);
+            autonStraightDrive(-6000);
+            autonIntakes(-6000);
         }
              
 

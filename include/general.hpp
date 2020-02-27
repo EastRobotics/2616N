@@ -3,6 +3,9 @@
 #define GENERAL_HPP
 #include "main.h"
 
+constexpr bool DEPLOY_ANTI_TIPS = true;
+constexpr bool DONT_DEPLOY_ANTI_TIPS = false;
+
 void deploy(void);
 void lift(void);
 void intakes(int voltage);
