@@ -1,4 +1,4 @@
-#include "autonSelector.hpp"
+#include "gui.hpp"
 #include "controllerScreen.hpp"
 
 
@@ -6,6 +6,7 @@ lv_obj_t* screen = lv_cont_create(lv_scr_act(), NULL);
 lv_obj_t* label = lv_label_create(lv_scr_act(), NULL);
 lv_obj_t* button = lv_btn_create(lv_scr_act(), NULL);
 lv_obj_t* buttonLabel = lv_label_create(button, NULL);
+lv_obj_t* trayPosLabel = lv_label_create(lv_scr_act(), NULL);
 
 void autonomous()
 {
@@ -15,7 +16,6 @@ void autonomous()
     f_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 
     autons[autonSelection].function();
-
     
     b_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
     f_left_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -26,6 +26,7 @@ void autonomous()
 void autonSelectorInit()
 {
     lv_obj_set_size(screen, 476, 272);
+
     lv_obj_set_pos(label, 10, 10);
     lv_obj_align(label, NULL, LV_ALIGN_IN_TOP_MID, 0, 30);
     lv_obj_set_size(label, 20, 250);
@@ -36,6 +37,9 @@ void autonSelectorInit()
     lv_obj_set_pos(button, 10, 60);
     lv_obj_set_size(button, 250, 50);
     lv_obj_set_style(button, &lv_style_pretty_color);
+
+    lv_obj_set_pos(trayPosLabel, 10, 150);
+    lv_obj_set_style(trayPosLabel, &lv_style_pretty_color);
 
     lv_label_set_text(buttonLabel, "Change Auton");
     lv_obj_align(buttonLabel, NULL, LV_ALIGN_CENTER, 0, 0);
@@ -56,12 +60,15 @@ void autonSelectorReset()
     lv_label_set_text(label, autons[autonSelection].code.c_str());
 }
 
-void autonSelectorButtonTask(void* a)
+void guiManagerTask(void* a)
 {
     while (true) {
-        if (autonSelectorButton.get_new_press()) {
+        if (autonSelectorButton.get_new_press())
             buttonPressed(nullptr);
-        }
+
+        std::string trayPosStr = "Tray Pos: " + std::to_string(tray_mtr.get_position());
+        lv_label_set_text(trayPosLabel, trayPosStr.c_str());
+
         pros::delay(75);
     }
 }
