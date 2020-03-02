@@ -6,4 +6,4 @@ void autonomous(void);
 void autonSelectorInit(void);
 lv_res_t buttonPressed(lv_obj_t * obj);
 void autonSelectorReset(void);
-void autonSelectorButtonTask(void* a);
+void guiManagerTask(void* a);

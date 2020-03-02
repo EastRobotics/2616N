@@ -60,50 +60,16 @@ void tray(void * a)
     while (true) {
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
             if (tray_mtr.get_position() >= TRAY_STOP) {
-                tray_mtr.move_voltage(1000+int((MAX_FORWARD-1000)*abs(cos(M_PI*tray_mtr.get_position()/12000)))/motorSlowdown);
-                if (tray_mtr.get_position() >= 3500) {
-                    autonIntakes(-3000);
-                }
-            }
-            else
-                tray_mtr.move_voltage(MAX_FORWARD);
-        // std::cout <<tray_mtr.get_position() << std::endl;
-        #ifdef NEW_TRAY_RETURN
-        } else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
+                    // tray_mtr.move_voltage(1000+int((MAX_FORWARD-1000)*abs(cos(M_PI*tray_mtr.get_position()/11000)))/motorSlowdown);
+                tray_mtr.move_voltage(6000+6000/(1+pow(M_E,0.005*(tray_mtr.get_position()-3500))));
+
+                // tray_mtr.move_voltage(9000);
             
-            // Lift out of the way
-            while (lift_mtr.get_position() < 200 && !liftInUse) {
-                lift_mtr.move_voltage(6000/motorSlowdown);
-                pros::delay(20);
-            }
-            lift_mtr.move_voltage(0);
-
-            // Quickly close to down
-            while (tray_mtr.get_position() > TRAY_STOP + 1200) {
-                tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
-                pros::delay(20);
-            }
-            tray_mtr.move_voltage(-4000/motorSlowdown);
-
-            // Lift back down
-            while (lift_mtr.get_position() > 10 && !liftInUse) {
-                lift_mtr.move_voltage(-6000/motorSlowdown);
-                pros::delay(20);
-            }
-            lift_mtr.move_voltage(0);
-
-            // Slowly the rest of the way
-            while (tray_mtr.get_position() > TRAY_STOP + 400) {
-                // tray_mtr.move_voltage(-4000/motorSlowdown);
-                pros::delay(20);
-            }
-            tray_mtr.move_voltage(0);
-        #else
+            } else
+                tray_mtr.move_voltage(MAX_FORWARD);
         } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B) && tray_mtr.get_position() > TRAY_STOP + 75) {
             tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
             tray_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
-        #endif
-
         } else {
             tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
             tray_mtr.move_voltage(0);
@@ -114,17 +80,27 @@ void tray(void * a)
 
 void intakes()
 {
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2) ) {
         right_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
-        left_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);
+        left_intake_mtr.move_voltage(MAX_FORWARD/motorSlowdown);   
     } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-        right_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
-        left_intake_mtr.move_voltage(MAX_BACKWARD/motorSlowdown);
-    } else {
-        if (tray_mtr.get_position() < 3500 && !controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-            right_intake_mtr.move_voltage(0);
-            left_intake_mtr.move_voltage(0);
+        if (motorSlowdown == 2) {
+            right_intake_mtr.move_voltage(-3000);
+            left_intake_mtr.move_voltage(-3000);
+        } else {
+            right_intake_mtr.move_voltage(MAX_BACKWARD);
+            left_intake_mtr.move_voltage(MAX_BACKWARD);
         }
+    } else if ( controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)&& tray_mtr.get_position()>3000) {
+        right_intake_mtr.move_voltage(9000);
+        left_intake_mtr.move_voltage(9000);
+    }
+    
+    
+    
+    else {
+        right_intake_mtr.move_voltage(0);
+        left_intake_mtr.move_voltage(0);
     }
 }
 
@@ -171,14 +147,14 @@ void opcontrol() {
 
         //Deployment
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
-            deploy(DEPLOY_ANTI_TIPS);
+            deploy(true);
 
         //Vibration at certain test values
         if ( (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)  || controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) && tray_mtr.get_position() <= 50) {
             controller.rumble("-");
         }
 
-        if (tray_mtr.get_position() > 3500) {
+        if (tray_mtr.get_position() > 8000) {
             right_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
             left_intake_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         } else {
@@ -188,10 +164,6 @@ void opcontrol() {
             }
         }
 
-        // if (lift_mtr.get_position() >= 2700 && controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-            // controller.rumble("-");
-        // }
-
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN) && !pros::competition::is_connected())
             autonomous();
 
@@ -199,8 +171,12 @@ void opcontrol() {
             tray_mtr.tare_position();
 
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
-            autonStraightDrive(-6000);
-            autonIntakes(-6000);
+            right_intake_mtr.move_voltage(-6000);
+            left_intake_mtr.move_voltage(-6000);
+            b_left_mtr.move_voltage(-6000);
+            b_right_mtr.move_voltage(-6000);
+            f_left_mtr.move_voltage(-6000);
+            f_right_mtr.move_voltage(-6000);
         }
              
 

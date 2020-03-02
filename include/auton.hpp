@@ -19,7 +19,7 @@ void deploy(bool deployAntiTips);
 void onePointAuton(void);
 void redUnprotAuton(void);
 void tareDrive(void);
-void autonSwitcherTask(void * a);
+// void autonSwitcherTask(void * a);
 
 static std::vector<auton_t> autons = {
     {onePointAuton, "OnePoint"},

@@ -105,12 +105,12 @@ void contScreenTask(void * a)
             passiveScreen();
         }
         showTemps();
-        controller.clear();
+        pros::delay(150);
+        // controller.clear();
 
         lastBattCapacity = (int)pros::battery::get_capacity();
         lastContBatt = controller.get_battery_capacity();
         lastAuton = autonSelection;
-        pros::delay(150);
     }
 }
 
