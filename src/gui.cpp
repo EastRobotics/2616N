@@ -7,6 +7,7 @@ lv_obj_t* label = lv_label_create(lv_scr_act(), NULL);
 lv_obj_t* button = lv_btn_create(lv_scr_act(), NULL);
 lv_obj_t* buttonLabel = lv_label_create(button, NULL);
 lv_obj_t* trayPosLabel = lv_label_create(lv_scr_act(), NULL);
+lv_obj_t* trayEffLabel = lv_label_create(lv_scr_act(), NULL);
 
 void autonomous()
 {
@@ -41,6 +42,9 @@ void autonSelectorInit()
     lv_obj_set_pos(trayPosLabel, 10, 150);
     lv_obj_set_style(trayPosLabel, &lv_style_pretty_color);
 
+    lv_obj_set_pos(trayEffLabel, 10, 180);
+    lv_obj_set_style(trayPosLabel, &lv_style_pretty_color);
+
     lv_label_set_text(buttonLabel, "Change Auton");
     lv_obj_align(buttonLabel, NULL, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style(buttonLabel, &lv_style_pretty_color);
@@ -63,11 +67,15 @@ void autonSelectorReset()
 void guiManagerTask(void* a)
 {
     while (true) {
+        lv_btn_set_state(button, LV_BTN_STATE_REL);
         if (autonSelectorButton.get_new_press())
             buttonPressed(nullptr);
 
-        std::string trayPosStr = "Tray Pos: " + std::to_string(tray_mtr.get_position());
+        std::string trayPosStr = "Tray Pos: " + std::to_string(int(tray_mtr.get_position()));
         lv_label_set_text(trayPosLabel, trayPosStr.c_str());
+
+        std::string trayEfficiencyStr = "Tray Efficiency: " + std::to_string(int(tray_mtr.get_efficiency()));
+        lv_label_set_text(trayEffLabel, trayEfficiencyStr.c_str());
 
         pros::delay(75);
     }

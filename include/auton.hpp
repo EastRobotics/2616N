@@ -8,7 +8,7 @@ typedef struct {
     std::string code;
 } auton_t;
 
-static int autonSelection = 1;
+static int autonSelection = 4;
 
 void autonDriveStop(void);
 void autonIntakes(int power);
@@ -19,10 +19,13 @@ void deploy(bool deployAntiTips);
 void onePointAuton(void);
 void redUnprotAuton(void);
 void tareDrive(void);
-// void autonSwitcherTask(void * a);
+void blueProtAuton(void);
+void redProtAuton(void);
 
 static std::vector<auton_t> autons = {
     {onePointAuton, "OnePoint"},
     {blueUnprotAuton, "B-Unprot"},
-    {redUnprotAuton, "R-Unprot"}
+    {redUnprotAuton, "R-Unprot"},
+    {blueProtAuton, "B-Prot"},
+    {redProtAuton, "R-Prot"}
 };

@@ -91,10 +91,11 @@ void intakes()
             right_intake_mtr.move_voltage(MAX_BACKWARD);
             left_intake_mtr.move_voltage(MAX_BACKWARD);
         }
-    } else if ( controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)&& tray_mtr.get_position()>3000) {
-        right_intake_mtr.move_voltage(9000);
-        left_intake_mtr.move_voltage(9000);
-    }
+    } 
+    // else if ( controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)&& tray_mtr.get_position()>3000) {
+    //     right_intake_mtr.move_voltage(9000);
+    //     left_intake_mtr.move_voltage(9000);
+    // }
     
     
     
@@ -147,7 +148,7 @@ void opcontrol() {
 
         //Deployment
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
-            deploy(true);
+            deploy(DONT_DEPLOY_ANTI_TIPS);
 
         //Vibration at certain test values
         if ( (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)  || controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) && tray_mtr.get_position() <= 50) {
