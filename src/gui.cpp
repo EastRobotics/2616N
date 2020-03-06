@@ -55,7 +55,6 @@ lv_res_t buttonPressed(lv_obj_t * obj)
 {
     autonSelection = autonSelection == autons.size() - 1 ? 0 : autonSelection + 1;
     autonSelectorReset();
-    passiveScreen();
     return LV_RES_OK;
 }
 
