@@ -113,7 +113,7 @@ void redUnprotAuton()
     // Move forward to get the 5 cubes
     autonIntakes(MAX_FORWARD);
     while(b_left_mtr.get_position() < 2900)
-        autonStraightDrive(4000);
+        autonStraightDrive(6000);
     autonDriveStop();
     pros::delay(500);
 
@@ -180,10 +180,57 @@ void onePointAuton()
 
 void redProtAuton()
 {
+    tareDrive();
     deploy(DONT_DEPLOY_ANTI_TIPS);
+    lift_mtr.move_velocity(-4000);
+    pros::delay(250);
 
-    autonDriveLeftRight(-4000, 4000);
-    pros::delay(860);
+    autonIntakes(10000);
+    pros::delay(1500);
+    while (b_left_mtr.get_position() < 1300) {
+        autonStraightDrive(5000);
+    }
+    autonDriveStop();
+    pros::delay(750);
+    autonDriveLeftRight(-6000, 6000);
+    pros::delay(640);
+    autonDriveStop();
+    pros::delay(250);
+    int initPos = b_left_mtr.get_position();
+    while (b_left_mtr.get_position() < 1100 + initPos)
+        autonDriveLeftRight(5000,4500);
+    autonDriveStop();
+    pros::delay(500);
+    autonDriveLeftRight(-6000,6000);
+    pros::delay(225);
+    autonDriveStop();
+
+    initPos = b_left_mtr.get_position();
+    while (b_left_mtr.get_position() < 700 + initPos)
+        autonStraightDrive(5000);
+    autonDriveStop();
+
+    autonIntakes(-12000);
+    pros::delay(300);
+    autonIntakes(0);
+
+    while (tray_mtr.get_position() < 4800)
+        tray_mtr.move_voltage(12000);
+    tray_mtr.move_voltage(0);
+
+     pros::delay(500);
+     initPos = b_left_mtr.get_position();
+     while (b_left_mtr.get_position() > -500 + initPos)
+        autonStraightDrive(-5000);
+    autonDriveStop();
+
+     for (int i = 0; i <= 150 && tray_mtr.get_position() > TRAY_STOP; i++) {
+        tray_mtr.move_voltage(-12000);
+        pros::delay(20);
+    }
+    tray_mtr.move_voltage(0);
+
+
 }
 
 void blueProtAuton() {}
