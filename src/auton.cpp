@@ -50,6 +50,69 @@ void blueUnprotAuton()
     // Move forward to get the 5 cubes
     autonIntakes(MAX_FORWARD);
     while(b_left_mtr.get_position() < 2900)
+        autonStraightDrive(6000);
+    autonDriveStop();
+    pros::delay(500);
+
+    autonIntakes(0);
+    // Backwards towards the goal zone
+    while (b_left_mtr.get_position() > 1300)
+        autonStraightDrive(-8000);
+    // Slow down when it's close to stop more accurately
+    while (b_left_mtr.get_position() > 1000)
+        autonStraightDrive(-4000);
+
+    // Turn ~135 degrees left
+    autonDriveLeftRight(-4000, 4000);
+    pros::delay(1250);
+
+    // Forwards into the goal zone (Times out after 2 sec if it's stuck)
+    int initPos = b_left_mtr.get_position();
+    for (int i = 0; b_left_mtr.get_position() < initPos + 450; i++) {
+        autonStraightDrive(8000);
+        pros::delay(20);
+    }
+    autonDriveStop();
+    pros::delay(250);
+
+    
+    autonIntakes(-12000);
+    pros::delay(150);
+    autonIntakes(0);
+
+    // Tray up, ~4800 is all the way up
+    while (tray_mtr.get_position() < 4800)
+        tray_mtr.move_voltage(12000);
+    tray_mtr.move_voltage(0);
+
+    // Nudge the stack, pretty slow to be careful
+    autonStraightDrive(5000);
+    pros::delay(750);
+
+    // Back out time
+    autonStraightDrive(-8000);
+    pros::delay(500);
+    autonDriveStop();
+    
+    // Tray back down
+    for (int i = 0; i <= 150 && tray_mtr.get_position() > TRAY_STOP; i++) {
+        tray_mtr.move_voltage(-12000);
+        pros::delay(20);
+    }
+    tray_mtr.move_voltage(0);
+    lift_mtr.move_voltage(0);
+}
+
+void blueUnprotAutonSLOW()
+{
+    deploy(DONT_DEPLOY_ANTI_TIPS);
+    pros::delay(1000);
+    tareDrive();
+    lift_mtr.move_voltage(-4000);
+
+    // Move forward to get the 5 cubes
+    autonIntakes(MAX_FORWARD);
+    while(b_left_mtr.get_position() < 2900)
         autonStraightDrive(4000);
     autonDriveStop();
     pros::delay(500);
@@ -75,18 +138,18 @@ void blueUnprotAuton()
     autonDriveStop();
     pros::delay(250);
 
-    autonIntakes(-12000);
-    pros::delay(200);
-    autonIntakes(0);
     
+    autonIntakes(-12000);
+    pros::delay(150);
+    autonIntakes(0);
+
     // Tray up, ~4800 is all the way up
-    while (tray_mtr.get_position() < 4800) {
+    while (tray_mtr.get_position() < 4800)
         tray_mtr.move_voltage(12000);
-    }
     tray_mtr.move_voltage(0);
 
     // Nudge the stack, pretty slow to be careful
-    autonStraightDrive(6000);
+    autonStraightDrive(5000);
     pros::delay(750);
 
     // Back out time
@@ -114,6 +177,68 @@ void redUnprotAuton()
     autonIntakes(MAX_FORWARD);
     while(b_left_mtr.get_position() < 2900)
         autonStraightDrive(6000);
+    autonDriveStop();
+    pros::delay(500);
+
+    autonIntakes(0);
+    // Backwards towards the goal zone
+    while (b_left_mtr.get_position() > 1300)
+        autonStraightDrive(-8000);
+    // Slow down when it's close to stop more accurately
+    while (b_left_mtr.get_position() > 1000)
+        autonStraightDrive(-4000);
+
+    // Turn ~135 degrees right
+    autonDriveLeftRight(4000, -4000);
+    pros::delay(1250);
+
+    // Forwards into the goal zone (Times out after 2 sec if it's stuck)
+    int initPos = b_left_mtr.get_position();
+    for (int i = 0; b_left_mtr.get_position() < initPos + 450; i++) {
+        autonStraightDrive(8000);
+        pros::delay(20);
+    }
+    autonDriveStop();
+    pros::delay(250);
+
+    
+    autonIntakes(-12000);
+    pros::delay(150);
+    autonIntakes(0);
+
+    // Tray up, ~4800 is all the way up
+    while (tray_mtr.get_position() < 4800)
+        tray_mtr.move_voltage(12000);
+    tray_mtr.move_voltage(0);
+
+    // Nudge the stack, pretty slow to be careful
+    autonStraightDrive(5000);
+    pros::delay(750);
+
+    // Back out time
+    autonStraightDrive(-8000);
+    pros::delay(500);
+    autonDriveStop();
+    
+    // Tray back down
+    for (int i = 0; i <= 150 && tray_mtr.get_position() > TRAY_STOP; i++) {
+        tray_mtr.move_voltage(-12000);
+        pros::delay(20);
+    }
+    tray_mtr.move_voltage(0);
+    lift_mtr.move_voltage(0);
+}
+
+void redUnprotAutonSLOW() {
+    deploy(DONT_DEPLOY_ANTI_TIPS);
+    pros::delay(1000);
+    tareDrive();
+    lift_mtr.move_voltage(-4000);
+
+    // Move forward to get the 5 cubes
+    autonIntakes(MAX_FORWARD);
+    while(b_left_mtr.get_position() < 2900)
+        autonStraightDrive(4000);
     autonDriveStop();
     pros::delay(500);
 

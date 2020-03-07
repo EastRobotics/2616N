@@ -10,7 +10,7 @@ void contScreenTask(void * a)
         released = false;
         controller.clear();
         pros::delay(50);
-        while (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
+        while (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
             count++;
             if (count % 4 <= 1) {
                 controller.print(0, 0, "BL - %d FL - %d", 
@@ -35,9 +35,9 @@ void contScreenTask(void * a)
         }
         controller.print(0, 0, "Battery - %d%%", (int)pros::battery::get_capacity());
         pros::delay(50);
-        controller.print(0, 0, "Cont Bat - %d%%", controller.get_battery_capacity());
+        controller.print(1, 0, "Cont Bat - %d%%", controller.get_battery_capacity());
         pros::delay(50);
-        controller.print(0, 0, "Auton: %s", autons[autonSelection].code);
+        controller.print(2, 0, "Auton: %s", currentAutonSelectionCode());
         pros::delay(350);
     }
 }

@@ -24,6 +24,11 @@ void autonomous()
     f_right_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 }
 
+std::string currentAutonSelectionCode()
+{
+    return autons[autonSelection].code;
+}
+
 void autonSelectorInit()
 {
     lv_obj_set_size(screen, 476, 272);
