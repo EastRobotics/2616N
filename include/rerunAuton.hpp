@@ -1,15 +1,11 @@
 #pragma once
-
-typedef enum {
-    BLEFT_MTR_INDEX = 0,
-    FLEFT_MTR_INDEX,
-    BRIGHT_MTR_INDEX,
-    FRIGHT_MTR_INDEX,
-    LIFT_MTR_INDEX,
-    TRAY_MTR_INDEX,
-    L_INTAKE_MTR_INDEX,
-    R_INTAKE_MTR_INDEX
-} allMotorIndexEnum;
+#include "general.hpp"
+#include "controllerScreen.hpp"
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <chrono>
+#include <numeric>
 
 void recordRerun(void* a);
 void replayRerun();
