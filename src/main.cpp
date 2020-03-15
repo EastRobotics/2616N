@@ -4,9 +4,10 @@
 #include "auton.hpp"
 #include "tasks.hpp"
 #include "gui.hpp"
+#include "rerunAuton.hpp"
 #include <array>
 
-// #define NEW_TRAY_RETURN
+// #define NEW_TRAY_RETURNz
 
 void initialize()
 {
@@ -55,9 +56,9 @@ void lift()
 }
 
 
-void tray(void * a)
+void tray()
 {
-    while (true) {
+    // while (true) {
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
             if (tray_mtr.get_position() >= TRAY_STOP) {
                     // tray_mtr.move_voltage(1000+int((MAX_FORWARD-1000)*abs(cos(M_PI*tray_mtr.get_position()/11000)))/motorSlowdown);
@@ -74,8 +75,8 @@ void tray(void * a)
             tray_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
             tray_mtr.move_voltage(0);
         }
-        pros::delay(30);
-    }
+        // pros::delay(30);
+    // }
 }
 
 void intakes()
@@ -129,12 +130,15 @@ void opcontrol() {
     pros::delay(120);
     tray_mtr.move_voltage(0);
 
-    pros::Task trayTask (tray, (void *)"", TASK_PRIORITY_DEFAULT + 2, TASK_STACK_DEPTH_DEFAULT, "trayTask");
+    // pros::Task trayTask (tray, (void *)"", TASK_PRIORITY_DEFAULT + 2, TASK_STACK_DEPTH_DEFAULT, "trayTask");
 
 	while (true) {
     	drive();
         intakes();
+        tray();
         lift();
+        
+        
         
         motorSlowdown = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A) ? 2 : 1;
 
@@ -168,8 +172,8 @@ void opcontrol() {
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN) && !pros::competition::is_connected())
             autonomous();
 
-        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT) && !pros::competition::is_connected())
-            tray_mtr.tare_position();
+        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP) && !pros::competition::is_connected())
+            replayRerun();
 
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
             right_intake_mtr.move_voltage(-6000);
