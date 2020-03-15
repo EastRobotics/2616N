@@ -4,8 +4,6 @@
 #include <tuple>
 
 class betterController : public pros::Controller {
-    private:
-        typedef std::tuple<int, int, const char*> contPrintFmt;
     public:
         betterController (pros::controller_id_e_t id);
 
@@ -22,8 +20,8 @@ class betterController : public pros::Controller {
         void clear(void);
         void clear_line(std::uint8_t line);
 
-        std::queue<contPrintFmt> contQueue;
+        std::queue<std::tuple<int, int, const char*>> contQueue;
 };
-void bContPrintTask(void* a);
+void bContPrintTask(void* cont);
 
 extern betterController controller;
