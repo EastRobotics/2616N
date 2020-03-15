@@ -3,6 +3,9 @@
 #include "main.h"
 #include "betterController.hpp"
 
+constexpr bool DEPLOY_ANTI_TIPS = true;
+constexpr bool DONT_DEPLOY_ANTI_TIPS = false;
+
 void deploy(void);
 void lift(void);
 void intakes(int voltage);
@@ -27,9 +30,11 @@ constexpr int TRAY_STOP = 100;
 
 #ifndef M_PI
 constexpr double M_PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679;
+constexpr double e = 2.7182818284590452353602874713527;
 #endif
-
 static int motorSlowdown = 1;
+
+static pros::ADIDigitalIn autonSelectorButton (8);
 
 static pros::Motor f_right_mtr(DRIVE_FRONT_RIGHT, pros::E_MOTOR_GEARSET_18, true);
 static pros::Motor b_right_mtr(DRIVE_BACK_RIGHT, pros::E_MOTOR_GEARSET_18, true);
