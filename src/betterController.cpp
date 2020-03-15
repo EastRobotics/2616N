@@ -1,5 +1,3 @@
-#ifndef BETTERCONTROLLER_CPP
-#define BETTER_CONTROLLER_CPP
 #include "betterController.hpp"
 // #include "general.hpp"
 
@@ -38,4 +36,3 @@ void bContPrintTask(void* a)
         pros::delay(50);
     }
 }
-#endif

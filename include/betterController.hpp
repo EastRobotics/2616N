@@ -1,8 +1,5 @@
 #pragma once
-#define B_CONTROLLER_HPP
-#ifndef GENERAL_HPP
 #include "main.h"
-#endif
 #include <queue>
 #include <tuple>
 
