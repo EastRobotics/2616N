@@ -38,6 +38,8 @@ void recordRerun(void* a)
                                   double(timeSpent) / double(counter) <<
                                  " milliseconds (should be 20)";
                     voltageData.close();
+                    positionData.close();
+                    velocityData.close();
                 }
             }
             pros::delay(350);
