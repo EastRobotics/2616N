@@ -31,5 +31,6 @@ void contScreenTask(void * a)
         controller.print(0, 0, "Battery - %d%%", (int)pros::battery::get_capacity());
         controller.print(1, 0, "Cont Bat - %d%%", controller.get_battery_capacity());
         controller.print(2, 0, "Auton: %s", currentAutonSelectionCode());
+        pros::delay(350);
     }
 }

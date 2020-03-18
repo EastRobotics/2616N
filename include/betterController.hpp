@@ -10,9 +10,9 @@ class betterController : public pros::Controller {
         // This definition has to be here or else it just can't compile because yay templates
         template <typename... Params>
         void print(std::uint8_t line, std::uint8_t col, const char* fmt, Params... args) {
-            char * str;
-            sprintf(str, fmt, args...);
-            contQueue.push(std::make_tuple(line, col, str));
+            char buffer[16];
+            snprintf(buffer, 16, fmt, args...);
+            contQueue.push(std::make_tuple(line, col, buffer));
         }
 
         void set_text(std::uint8_t line, std::uint8_t col, const char* str);
