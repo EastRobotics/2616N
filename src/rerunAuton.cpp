@@ -21,15 +21,22 @@ void recordRerun(void* a)
                         for (auto& i: motorCodes) {
                             char buffer[7];
                             // Format: ±XXXXX, ie. 732 -> +00732, -3321 -> -03321
-                            sprintf(buffer, "%+06d", i.motor->get_voltage());
+                            sprintf(buffer, "%+06d", (int)i.motor->get_voltage());
+                            std::cout << "Voltage: ";
                             std::cout << buffer << ' ';
                             voltageData << buffer << ' ';
-                            sprintf(buffer, "%+06d", i.motor->get_position());
+                            sprintf(buffer, "%+06d", (int)i.motor->get_position());
+                            std::cout << "Position: ";
+                            std::cout << buffer << std::endl;
                             positionData << buffer << ' ';
-                            sprintf(buffer, "%+06d", i.motor->get_actual_velocity());
+                            sprintf(buffer, "%+06d", (int)i.motor->get_actual_velocity());
+                            std::cout << "Velocity: ";
+                            std::cout << buffer << std::endl;
                             velocityData << buffer << ' ';
                         }
                         voltageData << std::endl;
+                        positionData << std::endl;
+                        velocityData << std::endl;
                         pros::delay(20);
                     }
 
@@ -37,6 +44,7 @@ void recordRerun(void* a)
                     std::cout << "Average duration of 1 record cycle: " <<
                                   double(timeSpent) / double(counter) <<
                                  " milliseconds (should be 20)";
+                    std::cout << "." << std::endl;
                     voltageData.close();
                     positionData.close();
                     velocityData.close();
@@ -53,7 +61,7 @@ void replayRerun()
     constexpr int ONE_VOLTAGE_LENGTH = 7;
     constexpr int ONE_NUM_LENGTH = 5;
     if (pros::usd::is_installed()) {
-        std::ifstream motorData ("/usd/motorData.txt", std::ios::in);
+        std::ifstream motorData ("/usd/voltageData.txt", std::ios::in);
         if (motorData.is_open()) {
             // Finding the length of the file in chars
             motorData.seekg(0, motorData.end);
@@ -75,13 +83,13 @@ void replayRerun()
                 counter++;
 
                 std::string currentLine = motorDataString.substr(i, ONE_LINE_LENGTH);
-                std::cout << "------" << "\n";
-                std::cout << currentLine << "\n";
-                std::cout << "------" << "\n";
+                // std::cout << "------" << "\n";
+                // std::cout << currentLine << "\n";
+                // std::cout << "------" << "\n";
                 for (int j = 0, k = 0; j < ONE_LINE_LENGTH-1; j += ONE_VOLTAGE_LENGTH, k++) {
-                    std::cout << k << "\n";
-                    std::cout << currentLine.substr(j, ONE_NUM_LENGTH+1) << "\n";
-                    std::cout << std::stoi(currentLine.substr(j, ONE_NUM_LENGTH+1)) << "\n";
+                    // std::cout << k << "\n";
+                    // std::cout << currentLine.substr(j, ONE_NUM_LENGTH+1) << "\n";
+                    // std::cout << std::stoi(currentLine.substr(j, ONE_NUM_LENGTH+1)) << "\n";
                     motorCodes[k].motor->move_voltage(std::stoi(currentLine.substr(j, ONE_NUM_LENGTH+1)));
                 }
                 pros::delay(20);
@@ -91,6 +99,7 @@ void replayRerun()
             std::cout << "Average duration of 1 replay cycle: " <<
                           double(timeSpent) / double(counter) <<
                          " milliseconds (should be 20)";
+            std::cout << "." << std::endl;
         }
     }
 }
