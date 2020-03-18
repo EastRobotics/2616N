@@ -8,6 +8,7 @@ void recordRerun(void* a)
                 std::ofstream voltageData  ("/usd/voltageData.txt", std::ios::out | std::ios::trunc);
                 std::ofstream positionData ("/usd/positionData.txt", std::ios::out | std::ios::trunc);
                 std::ofstream velocityData ("/usd/velocityData.txt", std::ios::out | std::ios::trunc);
+                std::ofstream controllerData ("/used/controllerData.txt", std::ios::out | std::ios::trunc);
 
                 if (voltageData.is_open() && positionData.is_open()) {
                     for (auto& i: motorCodes)
@@ -17,9 +18,10 @@ void recordRerun(void* a)
                     uint32_t startTime = pros::millis();
                     int counter = 0;
                     while (!controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+                        uint32_t runStartTime = pros::millis();
                         counter++;
+                        char buffer[7];
                         for (auto& i: motorCodes) {
-                            char buffer[7];
                             // Format: ±XXXXX, ie. 732 -> +00732, -3321 -> -03321
                             sprintf(buffer, "%+06d", (int)i.motor->get_voltage());
                             std::cout << "Voltage: ";
@@ -37,7 +39,16 @@ void recordRerun(void* a)
                         voltageData << std::endl;
                         positionData << std::endl;
                         velocityData << std::endl;
-                        pros::delay(20);
+
+                        for (auto& i: joystickAxesArray) {
+                            sprintf(buffer, "%+03d", controller.get_analog(i));
+                            controllerData << buffer << ' ';
+                        }
+                        for (auto& i: controllerButtonsArray)
+                            controllerData << (int)controller.get_digital(i) << ' ';
+                        controllerData << std::endl;
+
+                        pros::Task::delay_until(&runStartTime, 20);
                     }
 
                     int timeSpent = pros::millis() - startTime;
