@@ -8,6 +8,7 @@ void recordRerun(void* a)
                 std::ofstream voltageData  ("/usd/voltageData.txt", std::ios::out | std::ios::trunc);
                 std::ofstream positionData ("/usd/positionData.txt", std::ios::out | std::ios::trunc);
                 std::ofstream velocityData ("/usd/velocityData.txt", std::ios::out | std::ios::trunc);
+                std::ofstream currentData ("/usd/currentData.txt", std::ios::out | std::ios::trunc);
                 std::ofstream controllerData ("/used/controllerData.txt", std::ios::out | std::ios::trunc);
 
                 if (voltageData.is_open() && positionData.is_open()) {
@@ -23,7 +24,7 @@ void recordRerun(void* a)
                         char buffer[7];
                         for (auto& i: motorCodes) {
                             // Format: ±XXXXX, ie. 732 -> +00732, -3321 -> -03321
-                            sprintf(buffer, "%+06d", (int)i.motor->get_voltage());
+                            sprintf(buffer, "%+06d", i.motor->get_voltage());
                             std::cout << "Voltage: ";
                             std::cout << buffer << ' ';
                             voltageData << buffer << ' ';
@@ -35,10 +36,14 @@ void recordRerun(void* a)
                             std::cout << "Velocity: ";
                             std::cout << buffer << std::endl;
                             velocityData << buffer << ' ';
+                            sprintf(buffer, "%+06d", (int)i.motor->get_current_draw());
+                            std::cout << "Current: " << buffer << std::endl;
+                            currentData << buffer << ' '
                         }
                         voltageData << std::endl;
                         positionData << std::endl;
                         velocityData << std::endl;
+                        currentData << std::endl;
 
                         for (auto& i: joystickAxesArray) {
                             sprintf(buffer, "%+03d", controller.get_analog(i));
@@ -59,6 +64,8 @@ void recordRerun(void* a)
                     voltageData.close();
                     positionData.close();
                     velocityData.close();
+                    positionData.close();
+                    currentData.close();
                 }
             }
             pros::delay(350);
