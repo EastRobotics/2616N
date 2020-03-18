@@ -9,7 +9,7 @@ void recordRerun(void* a)
                 std::ofstream positionData ("/usd/positionData.txt", std::ios::out | std::ios::trunc);
                 std::ofstream velocityData ("/usd/velocityData.txt", std::ios::out | std::ios::trunc);
                 std::ofstream currentData ("/usd/currentData.txt", std::ios::out | std::ios::trunc);
-                std::ofstream controllerData ("/used/controllerData.txt", std::ios::out | std::ios::trunc);
+                std::ofstream controllerData ("/usd/controllerData.txt", std::ios::out | std::ios::trunc);
 
                 if (voltageData.is_open() && positionData.is_open()) {
                     for (auto& i: motorCodes)
@@ -38,7 +38,7 @@ void recordRerun(void* a)
                             velocityData << buffer << ' ';
                             sprintf(buffer, "%+06d", (int)i.motor->get_current_draw());
                             std::cout << "Current: " << buffer << std::endl;
-                            currentData << buffer << ' '
+                            currentData << buffer << ' ';
                         }
                         voltageData << std::endl;
                         positionData << std::endl;
