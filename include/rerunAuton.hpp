@@ -6,6 +6,22 @@
 #include <iostream>
 #include <string>
 
+typedef struct {
+    std::ofstream file;
+    int32_t (*function)(uint8_t);
+    int multiplier;
+} loggingStructInt;
+
+typedef struct {
+    std::ofstream file;
+    double (*function)(uint8_t);
+    int multiplier;
+} loggingStructDouble;
+
+constexpr std::array<uint8_t, 8> motorPortArray
+        ({DRIVE_BACK_LEFT, DRIVE_FRONT_LEFT, DRIVE_BACK_LEFT, DRIVE_FRONT_RIGHT,
+          LIFT_ADJUSTOR, TRAY_ANGLE_ADJUSTOR, INTAKE_LEFT, INTAKE_RIGHT});
+
 constexpr std::array<pros::controller_analog_e_t, 4> joystickAxesArray
         ({ANALOG_LEFT_X, ANALOG_LEFT_Y, ANALOG_RIGHT_X, ANALOG_RIGHT_Y});
 

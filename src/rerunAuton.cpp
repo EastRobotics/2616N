@@ -2,16 +2,21 @@
 
 void recordRerun(void* a)
 {
+    using namespace pros::c;
     if (pros::usd::is_installed() && !pros::competition::is_connected()) {
+        std::array<loggingStructInt, 2> loggingIntArr = {{
+            {std::ofstream ("/usd/voltage.txt",     std::ios::trunc), motor_get_voltage,      1},
+            {std::ofstream ("/usd/currentData.txt", std::ios::trunc), motor_get_current_draw, 1}
+        }};
+        std::array<loggingStructDouble, 3> loggingDoubleArr = {{
+            {std::ofstream ("/usd/positionData.txt", std::ios::trunc), motor_get_position,        1},
+            {std::ofstream ("/usd/velocityData.txt", std::ios::trunc), motor_get_actual_velocity, 1},
+            {std::ofstream ("/usd/powerData.txt",    std::ios::trunc), motor_get_power,           1000}
+        }};
+        std::ofstream controllerData ("/usd/controllerData.txt", std::ios::trunc);
         while (true) {
             if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT) && !pros::competition::is_connected()) {
-                std::ofstream voltageData  ("/usd/voltageData.txt", std::ios::out | std::ios::trunc);
-                std::ofstream positionData ("/usd/positionData.txt", std::ios::out | std::ios::trunc);
-                std::ofstream velocityData ("/usd/velocityData.txt", std::ios::out | std::ios::trunc);
-                std::ofstream currentData ("/usd/currentData.txt", std::ios::out | std::ios::trunc);
-                std::ofstream controllerData ("/usd/controllerData.txt", std::ios::out | std::ios::trunc);
-
-                if (voltageData.is_open() && positionData.is_open()) {
+                if (loggingIntArr[0].file.is_open()) {
                     for (auto& i: motorCodes)
                         i.motor->tare_position();
 
@@ -22,28 +27,20 @@ void recordRerun(void* a)
                         uint32_t runStartTime = pros::millis();
                         counter++;
                         char buffer[7];
-                        for (auto& i: motorCodes) {
-                            // Format: ±XXXXX, ie. 732 -> +00732, -3321 -> -03321
-                            sprintf(buffer, "%+06d", i.motor->get_voltage());
-                            std::cout << "Voltage: ";
-                            std::cout << buffer << ' ';
-                            voltageData << buffer << ' ';
-                            sprintf(buffer, "%+06d", (int)i.motor->get_position());
-                            std::cout << "Position: ";
-                            std::cout << buffer << std::endl;
-                            positionData << buffer << ' ';
-                            sprintf(buffer, "%+06d", (int)i.motor->get_actual_velocity());
-                            std::cout << "Velocity: ";
-                            std::cout << buffer << std::endl;
-                            velocityData << buffer << ' ';
-                            sprintf(buffer, "%+06d", (int)i.motor->get_current_draw());
-                            std::cout << "Current: " << buffer << std::endl;
-                            currentData << buffer << ' ';
+                        for (auto& i: loggingIntArr) {
+                            for (uint8_t port: motorPortArray) {
+                                snprintf(buffer, 7, "%+06d", i.function(port)*i.multiplier);
+                                i.file << buffer << ' ';
+                            }
+                            i.file << std::endl;
                         }
-                        voltageData << std::endl;
-                        positionData << std::endl;
-                        velocityData << std::endl;
-                        currentData << std::endl;
+                        for (auto& i: loggingDoubleArr) {
+                            for (uint8_t port: motorPortArray) {
+                                snprintf(buffer, 7, "%+06d", (int)(i.function(port)*i.multiplier));
+                                i.file << buffer << ' ';
+                            }
+                            i.file << std::endl;
+                        }
 
                         for (auto& i: joystickAxesArray) {
                             sprintf(buffer, "%+03d", controller.get_analog(i));
@@ -61,11 +58,7 @@ void recordRerun(void* a)
                                   double(timeSpent) / double(counter) <<
                                  " milliseconds (should be 20)";
                     std::cout << "." << std::endl;
-                    voltageData.close();
-                    positionData.close();
-                    velocityData.close();
-                    positionData.close();
-                    currentData.close();
+                    
                 }
             }
             pros::delay(350);
