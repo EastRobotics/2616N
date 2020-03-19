@@ -8,15 +8,10 @@
 
 typedef struct {
     std::ofstream file;
-    int32_t (*function)(uint8_t);
+    int32_t (*functionInt)(uint8_t);
+    double (*functionDouble)(uint8_t);
     int multiplier;
-} loggingStructInt;
-
-typedef struct {
-    std::ofstream file;
-    double (*function)(uint8_t);
-    int multiplier;
-} loggingStructDouble;
+} loggingStruct;
 
 constexpr std::array<uint8_t, 8> motorPortArray
         ({DRIVE_BACK_LEFT, DRIVE_FRONT_LEFT, DRIVE_BACK_LEFT, DRIVE_FRONT_RIGHT,

@@ -4,19 +4,17 @@ void recordRerun(void* a)
 {
     using namespace pros::c;
     if (pros::usd::is_installed() && !pros::competition::is_connected()) {
-        std::array<loggingStructInt, 2> loggingIntArr = {{
-            {std::ofstream ("/usd/voltage.txt",     std::ios::trunc), motor_get_voltage,      1},
-            {std::ofstream ("/usd/currentData.txt", std::ios::trunc), motor_get_current_draw, 1}
-        }};
-        std::array<loggingStructDouble, 3> loggingDoubleArr = {{
-            {std::ofstream ("/usd/positionData.txt", std::ios::trunc), motor_get_position,        1},
-            {std::ofstream ("/usd/velocityData.txt", std::ios::trunc), motor_get_actual_velocity, 1},
-            {std::ofstream ("/usd/powerData.txt",    std::ios::trunc), motor_get_power,           1000}
+        std::array<loggingStruct, 5> loggingFileArr = {{
+            {std::ofstream ("/usd/voltage.txt",      std::ios::trunc),  motor_get_voltage,        NULL,  1},
+            {std::ofstream ("/usd/currentData.txt",  std::ios::trunc),  motor_get_current_draw,   NULL,  1},
+            {std::ofstream ("/usd/positionData.txt", std::ios::trunc), NULL, motor_get_position,        1},
+            {std::ofstream ("/usd/velocityData.txt", std::ios::trunc), NULL, motor_get_actual_velocity, 1},
+            {std::ofstream ("/usd/powerData.txt",    std::ios::trunc), NULL, motor_get_power,           1000}
         }};
         std::ofstream controllerData ("/usd/controllerData.txt", std::ios::trunc);
-        while (true) {
-            if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT) && !pros::competition::is_connected()) {
-                if (loggingIntArr[0].file.is_open()) {
+        while (!pros::competition::is_connected()) {
+            if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+                if (loggingFileArr[0].file.is_open()) {
                     for (auto& i: motorCodes)
                         i.motor->tare_position();
 
@@ -27,16 +25,13 @@ void recordRerun(void* a)
                         uint32_t runStartTime = pros::millis();
                         counter++;
                         char buffer[7];
-                        for (auto& i: loggingIntArr) {
+                        for (loggingStruct& i: loggingFileArr) {
                             for (uint8_t port: motorPortArray) {
-                                snprintf(buffer, 7, "%+06d", i.function(port)*i.multiplier);
-                                i.file << buffer << ' ';
-                            }
-                            i.file << std::endl;
-                        }
-                        for (auto& i: loggingDoubleArr) {
-                            for (uint8_t port: motorPortArray) {
-                                snprintf(buffer, 7, "%+06d", (int)(i.function(port)*i.multiplier));
+                                if (i.functionInt != NULL){
+                                    snprintf(buffer, 7, "%+06d", i.functionInt(port)*i.multiplier);
+                                } else {
+                                    snprintf(buffer, 7, "%+06d", (int)(i.functionDouble(port)*i.multiplier));
+                                }
                                 i.file << buffer << ' ';
                             }
                             i.file << std::endl;
@@ -58,7 +53,6 @@ void recordRerun(void* a)
                                   double(timeSpent) / double(counter) <<
                                  " milliseconds (should be 20)";
                     std::cout << "." << std::endl;
-                    
                 }
             }
             pros::delay(350);
